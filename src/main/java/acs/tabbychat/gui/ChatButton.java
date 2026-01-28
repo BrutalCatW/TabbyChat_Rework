@@ -146,7 +146,9 @@ public class ChatButton extends GuiButton {
                                         this.y() + (this.height() - 8) / 2, var7 + (textOpacity << 24));
             }
             else {
-                this.drawCenteredString(fr, this.displayString, this.x() + this.width() / 2,
+                // Remove emoji markers for button titles (keep it simple)
+                String displayTitle = this.displayString.replace("¿", "");
+                this.drawCenteredString(fr, displayTitle, this.x() + this.width() / 2,
                                         this.y() + (this.height() - 8) / 2, var7 + (textOpacity << 24));
             }
         }

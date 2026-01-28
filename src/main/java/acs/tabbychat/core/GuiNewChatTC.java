@@ -1,5 +1,6 @@
 package acs.tabbychat.core;
 
+import acs.tabbychat.emoji.EmojiManager;
 import acs.tabbychat.gui.ChatBox;
 import acs.tabbychat.gui.ChatScrollBar;
 import acs.tabbychat.util.ChatComponentUtils;
@@ -69,7 +70,10 @@ public class GuiNewChatTC extends GuiNewChat {
     public void addChatLines(int _pos, TCChatLine _add) {
         chatReadLock.lock();
         try {
-            List<TCChatLine> lines = ChatComponentUtils.split(_add, this.chatWidth);
+            // CRITICAL: Prevent OutOfMemoryError when window is minimized/resizing
+            // If chat width is too small, splitting creates millions of tiny strings
+            int safeWidth = Math.max(this.chatWidth, 100);  // Minimum 100 pixels
+            List<TCChatLine> lines = ChatComponentUtils.split(_add, safeWidth);
             for (int i = lines.size() - 1; i >= 0; i--) {
 
                 this.chatLines.add(_pos, lines.get(i));
@@ -130,6 +134,7 @@ public class GuiNewChatTC extends GuiNewChat {
         }
         this.sentMessages.clear();
     }
+
 
     @Override
     public void deleteChatLine(int _id) {
@@ -192,11 +197,11 @@ public class GuiNewChatTC extends GuiNewChat {
             }
 
             if (tc.enabled()) {
-                maxDisplayedLines = MathHelper.floor_float(ChatBox.getChatHeight() / 9.0f);
+                maxDisplayedLines = MathHelper.floor_float(ChatBox.getChatHeight() / 10.0f);
                 if (!chatOpen)
                     maxDisplayedLines = MathHelper
                         .floor_float(TabbyChat.advancedSettings.chatBoxUnfocHeight.getValue()
-                                         * ChatBox.getChatHeight() / 900.0f);
+                                         * ChatBox.getChatHeight() / 1000.0f);
                 this.chatWidth = ChatBox.getChatWidth();
                 fadeTicks = TabbyChat.advancedSettings.chatFadeTicks.getValue().intValue();
             }
@@ -279,34 +284,37 @@ public class GuiNewChatTC extends GuiNewChat {
                         for (int i = 0; i < msgList.size(); i++) {
                             visLineCounter++;
                             byte xOrigin = 0;
-                            int yOrigin = ChatBox.anchoredTop && tc.enabled() ? -(visLineCounter * 9)
+                            int yOrigin = ChatBox.anchoredTop && tc.enabled() ? -(visLineCounter * 10)
                                 + ChatBox.getChatHeight()
-                                                                              : -visLineCounter * 9;
-                            drawRect(xOrigin, yOrigin, xOrigin + this.chatWidth, yOrigin + 9,
+                                                                              : -visLineCounter * 10;
+                            drawRect(xOrigin, yOrigin, xOrigin + this.chatWidth, yOrigin + 10,
                                      currentOpacity / 2 << 24);
                             GL11.glEnable(GL11.GL_BLEND);
                             int idx = ChatBox.anchoredTop && tc.enabled() ? msgList.size() - i - 1
                                                                           : i;
-                            String _chat = msgList.get(idx).getChatComponentWithTimestamp()
-                                .getFormattedText();
 
-                            if (!this.mc.gameSettings.chatColours)
+                            // Get processed text with emoji markers (from cache)
+                            String _chat = msgList.get(idx).getProcessedText();
+
+                            // Apply color code stripping if needed
+                            if (!this.mc.gameSettings.chatColours) {
                                 _chat = StringUtils.stripControlCodes(_chat);
+                            }
+
                             int textOpacity = (TabbyChat.advancedSettings.textIgnoreOpacity
                                                    .getValue() ? 255 : currentOpacity);
-                            if (msgList.get(i).getUpdatedCounter() < 0) {
-                                this.mc.fontRenderer.drawStringWithShadow(_chat, xOrigin,
-                                                                          yOrigin + 1, 0x888888 + (textOpacity << 24));
-                            }
-                            else
-                                this.mc.fontRenderer.drawStringWithShadow(_chat, xOrigin,
-                                                                          yOrigin + 1, 0xffffff + (textOpacity << 24));
+                            int color = (msgList.get(i).getUpdatedCounter() < 0)
+                                ? 0x888888 + (textOpacity << 24)
+                                : 0xffffff + (textOpacity << 24);
+
+                            // Render with emoji support
+                            EmojiManager.getInstance().renderText(_chat, (int)xOrigin, (int)(yOrigin + 1), color, true);
                             GL11.glDisable(GL11.GL_ALPHA_TEST);
                         }
                     }
                 }
             }
-            this.chatHeight = visLineCounter * 9;
+            this.chatHeight = visLineCounter * 10;
             if (tc.enabled()) {
                 if (chatOpen) {
                     ChatBox.setChatSize(this.chatHeight);
@@ -336,7 +344,7 @@ public class GuiNewChatTC extends GuiNewChat {
                 && clickYRel < this.chatHeight) {
                 chatReadLock.lock();
                 try {
-                    int displayedLines = Math.min(this.getHeightSetting() / 9,
+                    int displayedLines = Math.min(this.getHeightSetting() / 10,
                                                   this.chatLines.size());
                     if (clickXRel <= ChatBox.getChatWidth()
                         && clickYRel < this.mc.fontRenderer.FONT_HEIGHT * displayedLines
@@ -352,9 +360,16 @@ public class GuiNewChatTC extends GuiNewChat {
                             for (Object o : chatline.getChatComponentWithTimestamp()) {
                                 returnMe = (IChatComponent) o;
                                 if (returnMe instanceof ChatComponentText toReturn) {
-                                    clickYRel += this.mc.fontRenderer.getStringWidth(this
-                                                                                         .func_146235_b(toReturn
-                                                                                                            .getChatComponentText_TextValue()));
+                                    String textPart = this.func_146235_b(toReturn.getChatComponentText_TextValue());
+
+                                    // Use EmojiManager to get width with emoji support
+                                    int textWidth = EmojiManager.getInstance().getTextWidth(textPart);
+                                    // Fall back to vanilla if emoji not loaded
+                                    if (textWidth == 0) {
+                                        textWidth = this.mc.fontRenderer.getStringWidth(textPart);
+                                    }
+
+                                    clickYRel += textWidth;
 
                                     if (clickYRel > clickXRel)
                                         return toReturn;
@@ -375,8 +390,16 @@ public class GuiNewChatTC extends GuiNewChat {
     @Override
     protected void func_146237_a(IChatComponent _msg, int id, int tick, boolean backupFlag) {
 
+        // Convert Unicode emoji to markers for rendering
+        IChatComponent processedMsg = processEmojiInMessage(_msg);
+
         boolean optionalDeletion = false;
-        TCChatLine chatLine = new TCChatLine(tick, _msg, id);
+        TCChatLine chatLine = new TCChatLine(tick, processedMsg, id);
+
+        // Cache the processed text (with emoji markers AND color codes) for rendering
+        // Using getFormattedText() to preserve §r, §0-§f and other formatting codes
+        String processedText = processedMsg.getFormattedText();
+        chatLine.setProcessedText(processedText);
 
         // Delete message if requested
         if (id != 0) {
@@ -529,7 +552,7 @@ public class GuiNewChatTC extends GuiNewChat {
     public void scroll(int _lines) {
         int maxLineDisplay;
         if (tc.enabled()) {
-            maxLineDisplay = Math.round(ChatBox.getChatHeight() / 9.0f);
+            maxLineDisplay = Math.round(ChatBox.getChatHeight() / 10.0f);
             if (!this.getChatOpen())
                 maxLineDisplay = Math.round(maxLineDisplay
                                                 * TabbyChat.advancedSettings.chatBoxUnfocHeight.getValue() / 100.0f);
@@ -555,5 +578,31 @@ public class GuiNewChatTC extends GuiNewChat {
 
     public void setVisChatLines(int _move) {
         this.scrollOffset = _move;
+    }
+
+    /**
+     * Process IChatComponent to convert Unicode emoji to markers
+     */
+    private IChatComponent processEmojiInMessage(IChatComponent original) {
+        if (original == null) {
+            return original;
+        }
+
+        // Get the full formatted text (preserves color codes §r, §0-§f, etc.)
+        String originalText = original.getFormattedText();
+        String processedText = EmojiManager.getInstance().processIncomingMessage(originalText);
+
+        // If no changes, return original
+        if (originalText.equals(processedText)) {
+            return original;
+        }
+
+        // Create new component with processed text (using PUA markers)
+        // IMPORTANT: We create a single component with all text, NOT preserving siblings
+        // This is because siblings may contain original Unicode emoji that would override our conversion
+        ChatComponentText newComponent = new ChatComponentText(processedText);
+        newComponent.setChatStyle(original.getChatStyle().createShallowCopy());
+
+        return newComponent;
     }
 }

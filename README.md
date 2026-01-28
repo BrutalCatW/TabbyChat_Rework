@@ -1,21 +1,60 @@
-TabbyChat
-=========
-TabbyChat chat mod for Minecraft
+# TabbyChat
 
-Fork of 1.7.10 TabbyChat with the following changes:
-- Global filters
-- Fix incompatibility with lotr where lotr's /fmsg could send messages to the wrong fellowship
-- No LiteLoader support
-- No server side crashes but logged warning instead
-- Fixes crash with Botania's Corporea Index
-- Cleaner & more optimized codebase
-- Some updated translations (thanks to those who helped)
+Расширенный мод чата для Minecraft 1.7.10.
 
-[Latest builds](https://github.com/mist475/tabbychat/releases)
+## 📋 Описание
 
-Legacy Information:
-[Old builds](https://drone.io/github.com/killjoy1221/tabbychat/files)
+TabbyChat — полноформатная замена встроенного чата Minecraft. Многоканальный чат, система эмодзи с поддержкой Discord, графический пикер, проверка орфографии, фильтрация сообщений и настраиваемый интерфейс.
 
-Forum thread: http://www.minecraftforum.net/forums/mapping-and-modding/minecraft-mods/2181597-new-tabbychat-v1-11-1-smp-chat-overhaul-new
+Базируется на [mist475/tabbychat](https://github.com/mist475/tabbychat) (фокатор killjoy1221/tabbychat).
 
-This code is released under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 (CC-NC-SA) license, the contents of which are available at http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode
+## ✨ Добавлено
+
+### Система эмодзи
+
+- Полная система с поддержкой ~3000+ эмодзи из Discord
+- Три способа ввода: shortcode (`:fire:`), Unicode (вставка символа) и ASCII-алиасы (`:)`, `<3`)
+- Графический пикер с категориями, поиском и изменяемым размером
+- Рендеринг эмодзи как PNG-иконок через Twemoji
+- Поддержка полных последовательностей кодовых точек (variation selectors U+FE0F) для корректного отображения в Discord
+- Преобразование через PUA-маркеры (Private Use Area) для корректного расчёта ширины текста
+- Кэш обработанных сообщений для рендеринга без лишних пересчётов
+
+### Интерфейс
+
+- Текстовое поле с рендеринг эмодзи как иконок (GuiTextFieldEmoji)
+- Кнопки отправки и эмодзи-пикера с иконками и rounded gradient стилем
+- Кнопки пин и resize чата с иконками (12×12), промежуток 2px между ними
+- Увеличенная высота поля ввода (16px)
+- Увеличенная высота вкладок каналов (18px)
+- Утилиты рендеринга текстур и градиентных прямоугольников (RenderUtils)
+
+## 🔧 Исправления
+
+- Обрезка эмодзи снизу строки чата — высота строки увеличена с 9px до 10px, все расчёты согласованы
+- Позиционирование проверки орфографии (Jazzy) относительно текста с эмодзи
+- Удалён обход `filterSurrogatePairs` — заменён полноценной системой эмодзи с PUA-маркерами
+
+## 🚀 Установка
+
+1. Скачайте собранный jar
+2. Скопируйте в папку `mods/` клиента
+3. Требуется Minecraft Forge для 1.7.10
+
+## 🛠️ Сборка
+
+```bash
+./gradlew build
+```
+
+Требования: Java 8, Forge для Minecraft 1.7.10.
+
+## 🔗 Ссылки
+
+- [Оригинал mist475/tabbychat](https://github.com/mist475/tabbychat)
+- [Старые сборки оригинала](https://drone.io/github.com/killjoy1221/tabbychat/files)
+- [Ветка на форуме](http://www.minecraftforum.net/forums/mapping-and-modding/minecraft-mods/2181597-new-tabbychat-v1-11-1-smp-chat-overhaul-new)
+
+## 📜 Лицензия
+
+Creative Commons Attribution-NonCommercial-ShareAlike 3.0 (CC-NC-SA) — [текст лицензии](http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode)

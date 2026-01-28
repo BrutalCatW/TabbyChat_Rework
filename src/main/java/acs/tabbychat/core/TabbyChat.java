@@ -9,6 +9,7 @@ package acs.tabbychat.core;
  * prohibited, and a violation of copyright.
  */
 
+import acs.tabbychat.emoji.EmojiManager;
 import acs.tabbychat.gui.ChatBox;
 import acs.tabbychat.gui.TCSettingsAdvanced;
 import acs.tabbychat.gui.TCSettingsFilters;
@@ -120,6 +121,9 @@ public class TabbyChat {
         spellingSettings.loadSettingsFile();
         advancedSettings.loadSettingsFile();
         defaultUnicode = mc.fontRenderer.getUnicodeFlag();
+
+        // Initialize emoji system asynchronously
+        EmojiManager.getInstance().init();
     }
 
     public static TabbyChat getInstance() {

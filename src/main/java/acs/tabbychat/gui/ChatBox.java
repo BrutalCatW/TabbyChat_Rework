@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -19,14 +20,14 @@ public class ChatBox {
     public static int absMinX = 0;
     public static int absMinY = -36;
     public static int absMinW = 200;
-    public static int absMinH = 24;
+    public static int absMinH = 100;
     public static int unfocusedHeight = 160;
     public static boolean dragging = false;
     public static boolean resizing = false;
     public static boolean anchoredTop = false;
     public static boolean pinned = false;
-    protected static int tabTrayHeight = 14;
-    private static final int tabHeight = 14;
+    protected static int tabTrayHeight = 18;
+    private static final int tabHeight = 18;
     private static int chatHeight = 165;
     private static Point dragStart = new Point(0, 0);
     private static final GuiNewChatTC gnc = GuiNewChatTC.getInstance();
@@ -96,18 +97,30 @@ public class ChatBox {
                 Gui.drawRect(0, -current.height + tabTrayHeight + 1, current.width
                     - ChatScrollBar.barWidth - 2, -chatHeight, opacity / 2 << 24);
 
-                // Draw handle for mouse drag
-                Gui.drawRect(current.width - 7, -current.height + 2, current.width - 2,
-                             -current.height + 3, handleColor);
-                Gui.drawRect(current.width - 3, -current.height + 3, current.width - 2,
-                             -current.height + 7, handleColor);
+                // Draw resize button with icon (12x12 modern style)
+                boolean resizeHovered = resizeHovered();
+                long resizeBg = resizeHovered ? 0xFF555555L : 0xFF333333L;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                    current.width - 12, -current.height + 3, 12, 12,
+                    resizeBg, resizeBg, 2
+                );
+                acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/resize_ico.png");
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, resizeHovered ? 1.0f : 0.7f);
+                acs.tabbychat.util.RenderUtils.drawTexture(current.width - 11, -current.height + 4, 0, 0, 16, 16, 10, 10, 16, 16);
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-                // Draw pin button
-                Gui.drawRect(current.width - 14, -current.height + 2, current.width - 9,
-                             -current.height + 7, pinColor);
-                if (pinned)
-                    Gui.drawRect(current.width - 13, -current.height + 3, current.width - 10,
-                                 -current.height + 6, highlightColor);
+                // Draw pin button with icon (12x12 modern style)
+                boolean pinHovered = pinHovered();
+                long pinBg = pinHovered ? 0xFF555555L : 0xFF333333L;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                    current.width - 26, -current.height + 3, 12, 12,
+                    pinBg, pinBg, 2
+                );
+                acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/plus_ico.png");
+                long pinIconColor = pinned ? 0xFFFFFFFFl : (pinHovered ? 0xFFFFFFFFl : 0xFFAAAAAAAAl);
+                acs.tabbychat.util.RenderUtils.glColor(pinIconColor);
+                acs.tabbychat.util.RenderUtils.drawTexture(current.width - 25, -current.height + 4, 0, 0, 16, 16, 10, 10, 16, 16);
+                acs.tabbychat.util.RenderUtils.glColor(0xFFFFFFFFl);
             }
             else {
                 // Draw border around entire chat area
@@ -128,18 +141,30 @@ public class ChatBox {
                 Gui.drawRect(0, current.height - tabTrayHeight - chatHeight - 1, current.width
                     - ChatScrollBar.barWidth - 2, 0, opacity / 2 << 24);
 
-                // Draw handle for mouse drag
-                Gui.drawRect(current.width - 7, current.height - 2, current.width - 2,
-                             current.height - 3, handleColor);
-                Gui.drawRect(current.width - 3, current.height - 3, current.width - 2,
-                             current.height - 7, handleColor);
+                // Draw resize button with icon (12x12 modern style)
+                boolean resizeHovered = resizeHovered();
+                long resizeBg = resizeHovered ? 0xFF555555L : 0xFF333333L;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                    current.width - 12, current.height - 15, 12, 12,
+                    resizeBg, resizeBg, 2
+                );
+                acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/resize_ico.png");
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, resizeHovered ? 1.0f : 0.7f);
+                acs.tabbychat.util.RenderUtils.drawTexture(current.width - 11, current.height - 14, 0, 0, 16, 16, 10, 10, 16, 16);
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-                // Draw pin button
-                Gui.drawRect(current.width - 14, current.height - 2, current.width - 9,
-                             current.height - 7, pinColor);
-                if (pinned)
-                    Gui.drawRect(current.width - 13, current.height - 3, current.width - 10,
-                                 current.height - 6, highlightColor);
+                // Draw pin button with icon (12x12 modern style)
+                boolean pinHovered = pinHovered();
+                long pinBg = pinHovered ? 0xFF555555L : 0xFF333333L;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                    current.width - 26, current.height - 15, 12, 12,
+                    pinBg, pinBg, 2
+                );
+                acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/plus_ico.png");
+                long pinIconColor = pinned ? 0xFFFFFFFFl : (pinHovered ? 0xFFFFFFFFl : 0xFFAAAAAAAAl);
+                acs.tabbychat.util.RenderUtils.glColor(pinIconColor);
+                acs.tabbychat.util.RenderUtils.drawTexture(current.width - 25, current.height - 14, 0, 0, 16, 16, 10, 10, 16, 16);
+                acs.tabbychat.util.RenderUtils.glColor(0xFFFFFFFFl);
             }
         }
         else if (unfocusedHeight > 0) {
@@ -183,6 +208,13 @@ public class ChatBox {
         int scaledHeight = Math.round((gnc.sr.getScaledHeight() + current.y) / scaleSetting
                                           - current.y);
 
+        // If window is minimized (very small screen), don't resize chat - keep current size
+        // This prevents chat from collapsing to nothing when window is minimized
+        if (scaledHeight < 50 || scaledWidth < 100) {
+            // Screen too small, probably minimized - preserve current chat size
+            return;
+        }
+
         current.setBounds(newBounds);
         if (gnc.sr.getScaledHeight() < -current.y)
             scaledHeight = gnc.sr.getScaledHeight();
@@ -190,8 +222,17 @@ public class ChatBox {
             scaledWidth = gnc.sr.getScaledWidth();
 
         // Enforce minimum width/height
-        if (current.height < absMinH)
+        // Use higher minimum when chat is open to prevent collapsing to just tabs
+        // BUT only if screen is large enough to accommodate it
+        int effectiveMinH = gnc.getChatOpen() ? 100 : absMinH;  // 100px min when open, 24px when closed
+        // Don't enforce minimum larger than available screen space
+        if (scaledHeight >= effectiveMinH + 2) {
+            if (current.height < effectiveMinH)
+                current.height = effectiveMinH;
+        } else if (current.height < absMinH) {
+            // Always enforce absolute minimum
             current.height = absMinH;
+        }
         if (current.width < absMinW)
             current.width = absMinW;
 
@@ -207,6 +248,23 @@ public class ChatBox {
             current.width = scaledWidth - 2;
             current.x = 0;
         }
+
+        // Re-enforce minimum after maximum constraints to prevent collapsing when window is normal size
+        // Only apply if screen is large enough
+        if (scaledHeight >= effectiveMinH + 2 && current.height < effectiveMinH) {
+            int heightBeforeMin = current.height;
+            current.height = effectiveMinH;
+            // Adjust Y position if height was increased to minimum
+            if (anchoredTop)
+                current.y = Math.max(-scaledHeight + 1, current.y);
+            else
+                current.y = Math.min(absMinY - 1, current.y + heightBeforeMin - current.height);
+        } else if (current.height < absMinH) {
+            // Always enforce absolute minimum
+            current.height = absMinH;
+        }
+        if (current.width < absMinW)
+            current.width = absMinW;
 
         // Enforce minimum x position
         if (current.x < absMinX + 1)
@@ -363,40 +421,40 @@ public class ChatBox {
      * Returns if the chatbox is pinned
      */
     public static boolean pinHovered() {
-        // Check for mouse cursor over pin button
+        // Check for mouse cursor over pin button (12x12)
 
         Point cursor = scaleMouseCoords(Mouse.getX(), Mouse.getY());
         if (cursor == null)
             return false;
 
-        int rX = current.x + current.width - 15;
+        int rX = current.x + current.width - 26;
         int rY;
         if (anchoredTop)
-            rY = current.y + current.height - 8;
+            rY = current.y + current.height - 15;
         else
-            rY = current.y - current.height;
+            rY = current.y - current.height + 3;
 
-        return (cursor.x > rX && cursor.x < rX + 6 && cursor.y > rY && cursor.y < rY + 8);
+        return (cursor.x > rX && cursor.x < rX + 12 && cursor.y > rY && cursor.y < rY + 12);
     }
 
     /**
      * Resizes the chatbox
      */
     public static boolean resizeHovered() {
-        // Check for mouse cursor over resize handle
+        // Check for mouse cursor over resize handle (12x12)
 
         Point cursor = scaleMouseCoords(Mouse.getX(), Mouse.getY());
         if (cursor == null)
             return false;
 
-        int rX = current.x + current.width - 8;
+        int rX = current.x + current.width - 12;
         int rY;
         if (anchoredTop)
-            rY = current.y + current.height - 8;
+            rY = current.y + current.height - 15;
         else
-            rY = current.y - current.height;
+            rY = current.y - current.height + 3;
 
-        return (cursor.x > rX && cursor.x < rX + 8 && cursor.y > rY && cursor.y < rY + 8);
+        return (cursor.x > rX && cursor.x < rX + 12 && cursor.y > rY && cursor.y < rY + 12);
     }
 
     /**
@@ -518,8 +576,8 @@ public class ChatBox {
             }
 
             if (chan.tab == null) {
-                chan.setButtonObj(new ChatButton(chan.getID(), tabX + tabDx, gnc.sr
-                    .getScaledHeight() + current.y, tabWidth, tabHeight, chan.getDisplayTitle()));
+                chan.setButtonObj(new ChatButton(chan.getID(), tabX + tabDx, tabY,
+                    tabWidth, tabHeight, chan.getDisplayTitle()));
             }
             else {
                 chan.tab.id = chan.getID();

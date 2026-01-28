@@ -1,6 +1,8 @@
 package acs.tabbychat.jazzy;
 
 import acs.tabbychat.core.TabbyChat;
+import acs.tabbychat.emoji.EmojiManager;
+import acs.tabbychat.emoji.EmojiRegistry;
 import acs.tabbychat.gui.ITCSettingsGUI;
 import com.swabunga.spell.event.SpellCheckEvent;
 import com.swabunga.spell.event.SpellChecker;
@@ -53,10 +55,13 @@ public class TCSpellCheckManager {
 
     public void drawErrors(GuiScreen screen, List<GuiTextField> inputFields) {
         List<String> inputCache = new ArrayList<>();
+        List<GuiTextField> visibleFields = new ArrayList<>();
         int activeFields = 0;
         for (GuiTextField field : inputFields) {
-            if (field.getVisible())
+            if (field.getVisible()) {
                 activeFields++;
+                visibleFields.add(field);
+            }
             inputCache.add(field.getText());
         }
         if (activeFields == 0)
@@ -77,27 +82,34 @@ public class TCSpellCheckManager {
                 if (input.length() == 0)
                     break;
 
-                int y = screen.height - 4 - 12 * (activeFields - 1);
-                int x = 4;
+                // Use actual field position instead of calculating from screen bottom
+                int currentFieldIndex = activeFields - 1;
+                GuiTextField currentField = visibleFields.get(currentFieldIndex);
+                // Position underline below the text (field height is 16px, text starts at +0, text height is 9)
+                int y = currentField.yPosition + 9;  // 0 + 9 = 9 (text start + text height)
+                int x = currentField.xPosition + 2;  // Text has 2px left padding
                 int width;
                 int wordIndex = error.getKey();
                 int errLength = error.getValue().length();
 
                 while (wordIndex >= input.length()) {
                     wordIndex -= input.length();
-                    y += 12;
-                    if (!inputs.hasPrevious()) {
+                    currentFieldIndex++;
+                    if (!inputs.hasPrevious() || currentFieldIndex >= visibleFields.size()) {
                         return;
                     }
                     input = inputs.previous();
+                    currentField = visibleFields.get(currentFieldIndex);
+                    y = currentField.yPosition + 9;
+                    x = currentField.xPosition + 2;
                 }
 
                 if (wordIndex + errLength > input.length()) {
                     // Misspelled word spans line break
-                    x += Minecraft.getMinecraft().fontRenderer.getStringWidth(input.substring(0,
-                                                                                              wordIndex));
-                    width = Minecraft.getMinecraft().fontRenderer.getStringWidth(input.substring(
-                            wordIndex));
+                    String beforeWord = EmojiRegistry.convertUnicodeToMarkers(input.substring(0, wordIndex));
+                    String fromWord = EmojiRegistry.convertUnicodeToMarkers(input.substring(wordIndex));
+                    x += EmojiManager.getInstance().getTextWidth(beforeWord);
+                    width = EmojiManager.getInstance().getTextWidth(fromWord);
                     this.drawUnderline(screen, x, y, width);
 
                     if (inputs.hasPrevious()) {
@@ -107,16 +119,21 @@ public class TCSpellCheckManager {
                             continue;
                         else if (remainder > input.length())
                             return;
-                        y += 12;
-                        x = 4;
-                        width = Minecraft.getMinecraft().fontRenderer.getStringWidth(input
-                                                                                             .substring(0, remainder));
+                        currentFieldIndex++;
+                        if (currentFieldIndex >= visibleFields.size())
+                            return;
+                        currentField = visibleFields.get(currentFieldIndex);
+                        y = currentField.yPosition + 9;
+                        x = currentField.xPosition + 2;
+                        String remainderText = EmojiRegistry.convertUnicodeToMarkers(input.substring(0, remainder));
+                        width = EmojiManager.getInstance().getTextWidth(remainderText);
                     }
                 }
                 else {
-                    x += Minecraft.getMinecraft().fontRenderer.getStringWidth(input.substring(0,
-                                                                                              wordIndex));
-                    width = Minecraft.getMinecraft().fontRenderer.getStringWidth(error.getValue());
+                    String beforeWord = EmojiRegistry.convertUnicodeToMarkers(input.substring(0, wordIndex));
+                    String errorWord = EmojiRegistry.convertUnicodeToMarkers(error.getValue());
+                    x += EmojiManager.getInstance().getTextWidth(beforeWord);
+                    width = EmojiManager.getInstance().getTextWidth(errorWord);
                 }
 
                 this.drawUnderline(screen, x, y, width);

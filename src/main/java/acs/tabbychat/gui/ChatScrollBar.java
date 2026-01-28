@@ -70,7 +70,7 @@ public class ChatScrollBar {
     public static void drawScrollBar() {
         update();
         int minX = barX + 1;
-        int maxlines = gnc.getHeightSetting() / 9;
+        int maxlines = gnc.getHeightSetting() / 10;
         float chatOpacity = mc.gameSettings.chatOpacity * 0.9f + 0.1f;
         int currentOpacity = (int) (180 * chatOpacity);
         Gui.drawRect(barX, barTopY, barX + barWidth + 2, barBottomY, currentOpacity << 24);
@@ -87,7 +87,7 @@ public class ChatScrollBar {
      */
     public static void scrollBarMouseWheel() {
         update();
-        int maxlines = gnc.getHeightSetting() / 9;
+        int maxlines = gnc.getHeightSetting() / 10;
         int blines = gnc.getChatSize();
         if (blines > maxlines)
             mouseLoc = (float) gnc.chatLinesTraveled() / (blines - maxlines);
@@ -104,7 +104,7 @@ public class ChatScrollBar {
      * Handles scrolling from dragging the scroll bar
      */
     public static void scrollBarMouseDrag(int _absY) {
-        int maxlines = gnc.getHeightSetting() / 9;
+        int maxlines = gnc.getHeightSetting() / 10;
         int blines = gnc.getChatSize();
         if (blines <= maxlines) {
             mouseLoc = 0f;
@@ -140,10 +140,10 @@ public class ChatScrollBar {
     }
 
     public static void setOffset(int _x, int _y) {
-        int maxlines = gnc.getHeightSetting() / 9;
+        int maxlines = gnc.getHeightSetting() / 10;
         int clines = Math.min(gnc.getChatSize(), maxlines);
         barX = 324 + _x;
-        barMinY = mc.currentScreen.height - ((clines - 1) * 9 + 8) - 35 + _y;
+        barMinY = mc.currentScreen.height - ((clines - 1) * 10 + 8) - 35 + _y;
         barTopY = barMinY + barHeight / 2 + _y;
         barMaxY = mc.currentScreen.height - 45 + _y;
         barBottomY = barMaxY - barHeight / 2 + _y;

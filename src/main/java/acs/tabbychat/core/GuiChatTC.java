@@ -10,6 +10,8 @@ import acs.tabbychat.gui.ChatBox;
 import acs.tabbychat.gui.ChatButton;
 import acs.tabbychat.gui.ChatChannelGUI;
 import acs.tabbychat.gui.ChatScrollBar;
+import acs.tabbychat.gui.GuiEmojiPicker;
+import acs.tabbychat.gui.GuiTextFieldEmoji;
 import acs.tabbychat.gui.PrefsButton;
 import acs.tabbychat.gui.context.ChatContextMenu;
 import acs.tabbychat.util.ChatExtensions;
@@ -62,6 +64,13 @@ public class GuiChatTC extends GuiChat {
     public ChatScrollBar scrollBar;
     public TabbyChat tc;
     public GuiNewChatTC gnc;
+    private GuiButton sendButton;  // Send button next to input field
+    private GuiButton emojiButton;  // Emoji picker button left of send button
+    private GuiEmojiPicker emojiPicker;  // Emoji picker GUI
+    private static final int SEND_BUTTON_ID = 9999;
+    private static final int EMOJI_BUTTON_ID = 10000;
+    private static final int SEND_BUTTON_WIDTH = 20;
+    private static final int EMOJI_BUTTON_WIDTH = 20;
     private boolean playerNamesFound = false;
     private boolean waitingOnPlayerNames = false;
     private int playerNameIndex = 0;
@@ -85,6 +94,20 @@ public class GuiChatTC extends GuiChat {
 
     @Override
     public void actionPerformed(GuiButton par1GuiButton) {
+        // Handle send button click
+        if (par1GuiButton.id == SEND_BUTTON_ID) {
+            this.sendChat(ChatBox.pinned);
+            return;
+        }
+
+        // Handle emoji button click
+        if (par1GuiButton.id == EMOJI_BUTTON_ID) {
+            if (emojiPicker != null) {
+                emojiPicker.toggleVisibility();
+            }
+            return;
+        }
+
         // Attempts to send button to extensions.
         // If one returns true, stops here.
         for (IChatMouseExtension extension : extensions.getListOf(IChatMouseExtension.class)) {
@@ -267,12 +290,102 @@ public class GuiChatTC extends GuiChat {
                 inputHeight += 12;
         }
 
-        // Draw text fields and background
-        int bgWidth = (MacroKeybindCompat.present) ? this.width - 24 : this.width - 2;
-        drawRect(2, this.height - 2 - inputHeight, bgWidth, this.height - 2, Integer.MIN_VALUE);
-        for (GuiTextField field : this.inputList) {
-            if (field.getVisible())
-                field.drawTextBox();
+        // Draw input fields in separate box BELOW ChatBox (modern layout)
+        if (this.tc.enabled()) {
+            // Calculate ChatBox coordinates
+            int chatX = ChatBox.current.x;
+            int chatY = ChatBox.current.y;
+            int chatWidth = ChatBox.getChatWidth();
+            int chatScreenY = sr.getScaledHeight() + chatY;
+
+            // Input field box BELOW chat (separate box)
+            // Match full chat width (including scrollbar area: barWidth=5 + padding=2)
+            int fullChatWidth = chatWidth + 5 + 2;
+            // Reserve space for both emoji and send buttons
+            int totalButtonWidth = EMOJI_BUTTON_WIDTH + SEND_BUTTON_WIDTH + 4;
+            int inputFieldWidth = fullChatWidth - totalButtonWidth - 4;
+            int inputX = chatX + 2;
+            int inputBoxTop = chatScreenY + 5;  // 5 pixels gap below chat (increased from 2)
+            int inputBoxBottom = inputBoxTop + inputHeight + 2;
+
+            // Draw background for input box (separate from chat)
+            drawRect(chatX, inputBoxTop, chatX + fullChatWidth, inputBoxBottom, Integer.MIN_VALUE);
+
+            // Update and draw text fields
+            for (int i = 0; i < this.inputList.size(); i++) {
+                GuiTextField field = this.inputList.get(i);
+                if (field.getVisible()) {
+                    int fieldY = inputBoxTop + 2 + (i * 16);
+                    field.xPosition = inputX;
+                    field.yPosition = fieldY;
+                    field.width = inputFieldWidth;
+                    field.drawTextBox();
+                }
+            }
+
+            // Draw custom emoji button with icon (left of send button) - rounded style
+            if (emojiButton != null) {
+                int emojiX = chatX + fullChatWidth - SEND_BUTTON_WIDTH - EMOJI_BUTTON_WIDTH - 4;
+                int emojiY = inputBoxTop + 0;  // Align with text field
+                int buttonHeight = inputHeight + 2;  // Match send button height
+                emojiButton.xPosition = emojiX;
+                emojiButton.yPosition = emojiY;
+                emojiButton.width = EMOJI_BUTTON_WIDTH;
+                emojiButton.height = buttonHeight;
+                emojiButton.visible = true;
+                emojiButton.enabled = true;
+
+                // Draw custom emoji button with rounded background and icon (rounded style)
+                boolean emojiHovered = cursorX >= emojiX && cursorX < emojiX + EMOJI_BUTTON_WIDTH &&
+                                      cursorY >= emojiY && cursorY < emojiY + buttonHeight;
+                long emojiBg1 = emojiHovered ? 0xFF555555L : 0xFF333333L;
+                long emojiBg2 = emojiHovered ? 0xFF444444L : 0xFF222222L;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                    emojiX, emojiY, EMOJI_BUTTON_WIDTH, buttonHeight, emojiBg1, emojiBg2, 2
+                );
+                acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/smile_ico.png");
+                org.lwjgl.opengl.GL11.glColor4f(1.0f, 1.0f, 1.0f, emojiHovered ? 1.0f : 0.8f);
+                int iconSize = Math.min(12, buttonHeight - 2);
+                int iconY = emojiY + (buttonHeight - iconSize) / 2;
+                acs.tabbychat.util.RenderUtils.drawTexture(emojiX + (EMOJI_BUTTON_WIDTH - iconSize) / 2, iconY, 0, 0, 16, 16, iconSize, iconSize, 16, 16);
+                org.lwjgl.opengl.GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            }
+
+            // Draw custom send button with icon (in the input box) - rounded style
+            if (sendButton != null) {
+                int sendX = chatX + fullChatWidth - SEND_BUTTON_WIDTH - 2;
+                int sendY = inputBoxTop + 0;  // 1 pixel offset from top
+                int buttonHeight = inputHeight + 2;  // Full input box height
+                sendButton.xPosition = sendX;
+                sendButton.yPosition = sendY;
+                sendButton.width = SEND_BUTTON_WIDTH;
+                sendButton.height = buttonHeight;
+                sendButton.visible = true;
+                sendButton.enabled = true;
+
+                // Draw custom send button with rounded background and Telegram icon (rounded style)
+                boolean sendHovered = cursorX >= sendX && cursorX < sendX + SEND_BUTTON_WIDTH &&
+                                    cursorY >= sendY && cursorY < sendY + buttonHeight;
+                long sendBg1 = sendHovered ? 0xFF5588CCL : 0xFF4477BBL;
+                long sendBg2 = sendHovered ? 0xFF4477BBL : 0xFF3366AAL;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                    sendX, sendY, SEND_BUTTON_WIDTH, buttonHeight, sendBg1, sendBg2, 2
+                );
+                acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/tg_ico.png");
+                org.lwjgl.opengl.GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                int iconSize = Math.min(12, buttonHeight - 2);
+                int iconY = sendY + (buttonHeight - iconSize) / 2;
+                acs.tabbychat.util.RenderUtils.drawTexture(sendX + (SEND_BUTTON_WIDTH - iconSize) / 2, iconY, 0, 0, 42, 40, iconSize, iconSize, 42, 40);
+                org.lwjgl.opengl.GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            }
+        } else {
+            // Vanilla mode - draw at bottom of screen
+            int bgWidth = (MacroKeybindCompat.present) ? this.width - 24 : this.width - 2;
+            drawRect(2, this.height - 2 - inputHeight, bgWidth, this.height - 2, Integer.MIN_VALUE);
+            for (GuiTextField field : this.inputList) {
+                if (field.getVisible())
+                    field.drawTextBox();
+            }
         }
 
         // Draw current message length indicator
@@ -364,6 +477,10 @@ public class GuiChatTC extends GuiChat {
                     continue;
                 }
             }
+            // Skip custom buttons (emoji, send) - we draw them manually with rounded style
+            if (buttonTemp.id == EMOJI_BUTTON_ID || buttonTemp.id == SEND_BUTTON_ID) {
+                continue;
+            }
             buttonTemp.drawButton(this.mc, cursorX, cursorY);
         }
 
@@ -376,6 +493,13 @@ public class GuiChatTC extends GuiChat {
         // Draw the screen for extensions
         for (IChatRenderExtension extension : extensions.getListOf(IChatRenderExtension.class)) {
             extension.drawScreen(cursorX, cursorY, pointless);
+        }
+
+        // Draw emoji picker (on top of everything)
+        if (this.emojiPicker != null && this.emojiPicker.isVisible()) {
+            this.emojiPicker.draw(cursorX, cursorY);
+            // Update dragging state
+            this.emojiPicker.updateDragging(cursorX, cursorY);
         }
 
     }
@@ -468,6 +592,30 @@ public class GuiChatTC extends GuiChat {
 
     @Override
     public void handleMouseInput() {
+        // Handle emoji picker mouse input first (if visible)
+        if (this.emojiPicker != null && this.emojiPicker.isVisible()) {
+            try {
+                this.emojiPicker.handleMouseInput();
+
+                // Get scaled mouse coordinates
+                int mouseX = Mouse.getEventX() * this.width / mc.displayWidth;
+                int mouseY = this.height - Mouse.getEventY() * this.height / mc.displayHeight - 1;
+
+                // If mouse is over emoji picker, handle clicks here and prevent chat interaction
+                if (isMouseOverEmojiPicker(mouseX, mouseY)) {
+                    // Handle clicks in handleMouseInput (Minecraft standard)
+                    if (Mouse.getEventButton() == 0 && Mouse.getEventButtonState()) {
+                        this.emojiPicker.mouseClicked(mouseX, mouseY, 0);
+                    } else if (Mouse.getEventButton() == 0 && !Mouse.isButtonDown(0)) {
+                        this.emojiPicker.mouseReleased(mouseX, mouseY, 0);
+                    }
+                    return; // Don't process chat scroll/drag when over emoji picker
+                }
+            } catch (Exception e) {
+                System.err.println("[TabbyChat/Emoji] Error handling emoji picker mouse input: " + e.getMessage());
+            }
+        }
+
         // Allow chatbox dragging
         if (ChatBox.resizing) {
             if (!Mouse.isButtonDown(0))
@@ -511,7 +659,7 @@ public class GuiChatTC extends GuiChat {
         else if (this.tc.enabled())
             ChatScrollBar.handleMouse();
 
-        if (mc.currentScreen.getClass() != GuiChat.class)
+        if (mc.currentScreen != null && mc.currentScreen.getClass() != GuiChat.class)
             super.handleMouseInput();
 
         // let extensions handle mouse.
@@ -547,8 +695,8 @@ public class GuiChatTC extends GuiChat {
         String text = this.defaultInputFieldText;
         if (this.inputField != null)
             text = inputField.getText();
-        this.inputField = new GuiTextField(this.fontRendererObj, 4, this.height - 12,
-                                           textFieldWidth, 12);
+        this.inputField = new GuiTextFieldEmoji(this.fontRendererObj, 4, this.height - 16,
+                                                textFieldWidth, 16);
         this.inputField.setMaxStringLength(500);
         this.inputField.setCanLoseFocus(false);
         this.inputField.setFocused(true);
@@ -556,13 +704,34 @@ public class GuiChatTC extends GuiChat {
         this.inputField.setVisible(true);
         this.inputField.setEnableBackgroundDrawing(false);
         this.inputList.add(0, this.inputField);
+
+        // Create send button and emoji button (for TabbyChat mode only)
+        if (tc.enabled()) {
+            this.sendButton = new GuiButton(SEND_BUTTON_ID, 0, 0, SEND_BUTTON_WIDTH, 12, ">");
+            this.sendButton.visible = true;
+            this.sendButton.enabled = true;
+            this.buttonList.add(this.sendButton);
+
+            // Create emoji button with emoji icon
+            this.emojiButton = new GuiButton(EMOJI_BUTTON_ID, 0, 0, EMOJI_BUTTON_WIDTH, 12, "\u263A");
+            this.emojiButton.visible = true;
+            this.emojiButton.enabled = true;
+            this.buttonList.add(this.emojiButton);
+
+            // Initialize emoji picker
+            if (this.emojiPicker == null) {
+                this.emojiPicker = new GuiEmojiPicker();
+            }
+            this.emojiPicker.setTargetTextField(this.inputField);
+        }
+
         if (!tc.enabled())
             return;
 
         GuiTextField placeholder;
         for (int i = 1; i < 3; i++) {
-            placeholder = new GuiTextField(this.fontRendererObj, 4, this.height - 12 * (i + 1),
-                                           textFieldWidth, 12);
+            placeholder = new GuiTextFieldEmoji(this.fontRendererObj, 4, this.height - 16 * (i + 1),
+                                                textFieldWidth, 16);
             placeholder.setMaxStringLength(500);
             placeholder.setCanLoseFocus(false);
             placeholder.setFocused(false);
@@ -585,6 +754,8 @@ public class GuiChatTC extends GuiChat {
                                                 .trim() + " ");
             }
             ChatBox.enforceScreenBoundary(ChatBox.current);
+            // Refresh chat after boundary enforcement to recalculate split with new width
+            this.gnc.refreshChat();
         }
 
         // Init the gui for extensions.
@@ -791,6 +962,13 @@ public class GuiChatTC extends GuiChat {
 
     @Override
     public void mouseClicked(int _x, int _y, int _button) {
+        // Handle emoji picker clicks first (if visible)
+        if (this.emojiPicker != null && this.emojiPicker.isVisible()) {
+            if (this.emojiPicker.mouseClicked(_x, _y, _button)) {
+                return; // Emoji picker handled the click
+            }
+        }
+
         Point scaled = ChatBox.scaleMouseCoords(Mouse.getX(), Mouse.getY(), true);
         boolean clicked = false;
         if (scaled != null && _button == 0 && this.mc.gameSettings.chatLinks
@@ -880,7 +1058,7 @@ public class GuiChatTC extends GuiChat {
             }
 
         for (int i = 0; i < this.inputList.size(); i++) {
-            if (_y >= this.height - 12 * (i + 1) && this.inputList.get(i).getVisible()) {
+            if (_y >= this.height - 16 * (i + 1) && this.inputList.get(i).getVisible()) {
                 this.inputList.get(i).setFocused(true);
                 for (GuiTextField field : this.inputList) {
                     if (field != this.inputList.get(i))
@@ -900,22 +1078,45 @@ public class GuiChatTC extends GuiChat {
             }
         // Replicating GuiScreen's mouseClicked method since 'super' won't work
         for (GuiButton _guibutton : this.buttonList) {
-            if (_guibutton instanceof ChatButton guiButton) {
-                if (guiButton.mousePressed(this.mc, _x, _y)) {
-                    if (_button == 0) {
+            if (_guibutton.mousePressed(this.mc, _x, _y)) {
+                if (_button == 0) {
+                    // Handle regular buttons (like send button)
+                    if (!(_guibutton instanceof ChatButton)) {
+                        this.selectedButton = _guibutton;
+                        this.mc.thePlayer.playSound("random.click", 1.0F, 1.0F);
+                        this.actionPerformed(_guibutton);
+                        return;
+                    }
+
+                    // Handle ChatButton
+                    if (_guibutton instanceof ChatButton guiButton) {
                         this.selectedButton = guiButton;
                         this.mc.thePlayer.playSound("random.click", 1.0F, 1.0F);
                         this.actionPerformed(guiButton);
                         return;
                     }
-                    else if (_button == 1) {
-                        if (guiButton.channel == this.tc.channelMap.get("*"))
-                            return;
-                        this.mc.displayGuiScreen(new ChatChannelGUI(guiButton.channel));
-                    }
+                }
+                else if (_button == 1 && _guibutton instanceof ChatButton guiButton) {
+                    if (guiButton.channel == this.tc.channelMap.get("*"))
+                        return;
+                    this.mc.displayGuiScreen(new ChatChannelGUI(guiButton.channel));
                 }
             }
         }
+    }
+
+    protected void mouseReleased(int _x, int _y, int _button) {
+        // Handle emoji picker mouse release
+        if (this.emojiPicker != null && this.emojiPicker.isVisible()) {
+            this.emojiPicker.mouseReleased(_x, _y, _button);
+        }
+    }
+
+    /**
+     * Check if mouse is over emoji picker
+     */
+    private boolean isMouseOverEmojiPicker(int mouseX, int mouseY) {
+        return this.emojiPicker != null && this.emojiPicker.isMouseOver(mouseX, mouseY);
     }
 
     @Override
@@ -1046,6 +1247,11 @@ public class GuiChatTC extends GuiChat {
     @Override
     public void updateScreen() {
         this.inputField.updateCursorCounter();
+
+        // Update emoji picker
+        if (this.emojiPicker != null) {
+            this.emojiPicker.updateScreen();
+        }
 
         // Update screen for extensions
         for (IChatUpdateExtension ext : extensions.getListOf(IChatUpdateExtension.class)) {

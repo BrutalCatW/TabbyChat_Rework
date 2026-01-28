@@ -1,5 +1,6 @@
 package acs.tabbychat.core;
 
+import acs.tabbychat.emoji.EmojiManager;
 import acs.tabbychat.gui.ChatBox;
 import acs.tabbychat.gui.ChatButton;
 import acs.tabbychat.util.ChatComponentUtils;
@@ -52,8 +53,9 @@ public class ChatChannel {
         this.notificationsOn = TabbyChat.generalSettings.unreadFlashing.getValue();
     }    // Caches the split chat. Has a short expiration so we update when we need
     // to. If problems persist, increase expiration.
+    // Increased from 50ms to 500ms to reduce GC pressure and memory allocations
     private final Supplier<List<TCChatLine>> supplier = Suppliers.memoizeWithExpiration(
-            () -> ChatChannel.this.getSplitChat(true), 50, TimeUnit.MILLISECONDS);
+            () -> ChatChannel.this.getSplitChat(true), 500, TimeUnit.MILLISECONDS);
 
     public ChatChannel(int _x, int _y, int _w, int _h, String _title) {
         this();
@@ -76,6 +78,26 @@ public class ChatChannel {
         this.chatWriteLock.lock();
         try {
             this.chatLog.add(0, newChat);
+
+            // Force trim immediately if size exceeds threshold
+            // This prevents OutOfMemoryError even when serverDataLock is blocked
+            TabbyChat tc = GuiNewChatTC.tc;
+            int maxChats = 100;  // Safe default
+            if (tc != null && tc.enabled()) {
+                try {
+                    maxChats = Integer.parseInt(TabbyChat.advancedSettings.chatScrollHistory.getValue());
+                } catch (Exception e) {
+                    maxChats = 100;
+                }
+            }
+
+            // Trim more aggressively (+10 buffer instead of +50)
+            // This prevents OOM when getSplitChat() is called
+            if (this.chatLog.size() > maxChats + 10) {
+                while (this.chatLog.size() > maxChats) {
+                    this.chatLog.remove(this.chatLog.size() - 1);
+                }
+            }
         }
         finally {
             this.chatWriteLock.unlock();
@@ -131,6 +153,31 @@ public class ChatChannel {
      * Returns the size of the log
      */
     public int getChatLogSize() {
+        // CRITICAL: Trim before getSplitChat() to prevent OutOfMemoryError
+        // This handles cases where old channels have accumulated too many messages
+        TabbyChat tc = GuiNewChatTC.tc;
+        int maxChats = 100;  // Safe default
+        if (tc != null && tc.enabled()) {
+            try {
+                maxChats = Integer.parseInt(TabbyChat.advancedSettings.chatScrollHistory.getValue());
+            } catch (Exception e) {
+                maxChats = 100;
+            }
+        }
+
+        // Emergency trim if way over limit (this should rarely happen)
+        if (this.chatLog.size() > maxChats * 2) {
+            this.chatWriteLock.lock();
+            try {
+                while (this.chatLog.size() > maxChats) {
+                    this.chatLog.remove(this.chatLog.size() - 1);
+                }
+            }
+            finally {
+                this.chatWriteLock.unlock();
+            }
+        }
+
         int mySize;
         this.chatReadLock.lock();
         try {
@@ -146,7 +193,10 @@ public class ChatChannel {
         if (!force) {
             return supplier.get();
         }
-        return ChatComponentUtils.split(this.chatLog, ChatBox.getChatWidth());
+        // CRITICAL: Prevent OutOfMemoryError when window is minimized/resizing
+        // If chat width is too small, splitting creates millions of tiny strings
+        int chatWidth = Math.max(ChatBox.getChatWidth(), 100);  // Minimum 100 pixels
+        return ChatComponentUtils.split(this.chatLog, chatWidth);
     }
 
     public int getID() {
@@ -252,7 +302,7 @@ public class ChatChannel {
     }
 
     /**
-     * Trims the log
+     * Trims the log (checks serverDataLock)
      */
     public void trimLog() {
         TabbyChat tc = GuiNewChatTC.tc;
@@ -284,7 +334,11 @@ public class ChatChannel {
         Gui.drawRect(this.tab.x(), tabY, this.tab.x() + this.tab.width(), tabY + this.tab.height(),
                      0x720000 + (_opacity / 2 << 24));
         GL11.glEnable(GL11.GL_BLEND);
-        mc.ingameGUI.getChatGUI().drawCenteredString(mc.fontRenderer, this.getDisplayTitle(),
+        // Use EmojiManager to process title (will filter emoji if not supported)
+        String displayTitle = EmojiManager.getInstance().processIncomingMessage(this.getDisplayTitle());
+        // Remove emoji markers for tab titles (keep it simple)
+        displayTitle = displayTitle.replace("¿", "");
+        mc.ingameGUI.getChatGUI().drawCenteredString(mc.fontRenderer, displayTitle,
                                                      this.tab.x() + this.tab.width() / 2, tabY + 4, 16711680 + (_opacity << 24));
     }
 

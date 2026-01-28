@@ -14,6 +14,9 @@ public class TCChatLine extends TCChatLineFake {
     @Expose
     protected boolean statusMsg = false;
 
+    // Cached processed text with emoji markers for rendering
+    private String processedTextCache = null;
+
     public TCChatLine(int _counter, IChatComponent _string, int _id) {
         super(_counter, _string, _id);
     }
@@ -23,6 +26,7 @@ public class TCChatLine extends TCChatLineFake {
         if (_cl instanceof TCChatLine line) {
             timeStamp = line.timeStamp;
             statusMsg = line.statusMsg;
+            processedTextCache = line.processedTextCache; // CRITICAL: Copy emoji processed text cache
         }
     }
 
@@ -46,5 +50,33 @@ public class TCChatLine extends TCChatLineFake {
             result = getTimeStamp().appendSibling(result);
         }
         return result;
+    }
+
+    /**
+     * Set cached processed text for emoji rendering
+     */
+    public void setProcessedText(String text) {
+        this.processedTextCache = text;
+    }
+
+    /**
+     * Get processed text for rendering (with PUA emoji markers and timestamp)
+     * Falls back to getFormattedText() if not set
+     */
+    public String getProcessedText() {
+        String text = processedTextCache;
+
+        // Fallback to formatted text if no cached version (preserves color codes)
+        if (text == null) {
+            text = getChatComponent().getFormattedText();
+        }
+
+        // Add timestamp if enabled
+        if (TabbyChat.generalSettings.timeStampEnable.getValue() && timeStamp != null) {
+            String timestamp = TabbyChat.generalSettings.timeStamp.format(timeStamp);
+            text = timestamp + " " + text;
+        }
+
+        return text;
     }
 }
