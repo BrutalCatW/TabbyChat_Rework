@@ -25,6 +25,8 @@ public class ChatScrollBar {
 
     public static void handleMouse() {
         Point cursor = ChatBox.scaleMouseCoords(Mouse.getEventX(), Mouse.getEventY());
+        if (cursor == null)
+            return;
 
         if (Mouse.getEventButton() == 0 && Mouse.isButtonDown(0)) {
             int offsetX = barX + ChatBox.current.x;

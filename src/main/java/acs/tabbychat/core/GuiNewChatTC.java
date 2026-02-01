@@ -340,6 +340,8 @@ public class GuiNewChatTC extends GuiNewChat {
         else {
             IChatComponent returnMe = null;
             Point adjClick = ChatBox.scaleMouseCoords(clickX, clickY);
+            if (adjClick == null)
+                return null;
             int clickXRel = Math.abs(adjClick.x - ChatBox.current.x);
             int clickYRel = Math.abs(adjClick.y - ChatBox.current.y);
             if (clickXRel >= 0 && clickYRel >= 0 && clickXRel < this.chatWidth

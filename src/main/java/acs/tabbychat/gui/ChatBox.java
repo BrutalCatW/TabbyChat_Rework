@@ -470,12 +470,18 @@ public class ChatBox {
         dragging = true;
         resizing = false;
         dragStart = scaleMouseCoords(atX, atY, true);
+        if (dragStart == null) {
+            dragging = false;
+        }
     }
 
     public static void startResizing(int atX, int atY) {
         dragging = false;
         resizing = true;
         dragStart = scaleMouseCoords(atX, atY, true);
+        if (dragStart == null) {
+            resizing = false;
+        }
     }
 
     public static boolean tabTrayHovered(int mx, int my) {
@@ -485,6 +491,8 @@ public class ChatBox {
             return false;
 
         Point click = scaleMouseCoords(mx, my);
+        if (click == null)
+            return false;
 
         if (!anchoredTop) {
             return (click.x > current.x && click.x < current.x + current.width
