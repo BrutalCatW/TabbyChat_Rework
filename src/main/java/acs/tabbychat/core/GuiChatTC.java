@@ -319,6 +319,7 @@ public class GuiChatTC extends GuiChat {
                     field.xPosition = inputX;
                     field.yPosition = fieldY;
                     field.width = inputFieldWidth;
+                    field.height = 16;  // Always single line
                     field.drawTextBox();
                 }
             }

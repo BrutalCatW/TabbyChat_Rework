@@ -2,9 +2,11 @@ package acs.tabbychat.gui;
 
 import acs.tabbychat.emoji.EmojiManager;
 import acs.tabbychat.emoji.EmojiRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
 import org.lwjgl.opengl.GL11;
 
@@ -53,11 +55,42 @@ public class GuiTextFieldEmoji extends GuiTextField {
         String displayText = text;
         int drawX = this.xPosition + 2;  // Left padding
         int drawY = this.yPosition;  // No top padding - align to top of field
+        int maxWidth = this.width - 4;  // Available width for text (minus padding)
 
         // Handle text scrolling when it's longer than field width
-        // This is simplified - vanilla has more complex logic
         if (displayText.length() > 0) {
             String visibleText = displayText;
+
+            // Calculate scroll offset to keep cursor visible
+            int fullTextWidth = EmojiManager.getInstance().getTextWidth(displayText);
+            int scrollOffset = 0;
+
+            if (fullTextWidth > maxWidth && this.isFocused()) {
+                // Text is too long - need to scroll
+                String beforeCursor = displayText.substring(0, cursorPos);
+                int beforeCursorWidth = EmojiManager.getInstance().getTextWidth(beforeCursor);
+
+                // Scroll to keep cursor visible
+                if (beforeCursorWidth > maxWidth) {
+                    scrollOffset = beforeCursorWidth - maxWidth;
+                }
+            }
+
+            drawX -= scrollOffset;
+
+            // Enable scissor test to clip text outside field bounds
+            Minecraft mc = Minecraft.getMinecraft();
+            ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+            int scale = sr.getScaleFactor();
+
+            // Calculate scissor box in screen pixels (from bottom-left)
+            int scissorX = this.xPosition * scale;
+            int scissorY = mc.displayHeight - (this.yPosition + this.height) * scale;
+            int scissorWidth = this.width * scale;
+            int scissorHeight = this.height * scale;
+
+            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight);
 
             // Render text with emoji support
             // Cursor blinks every 500ms (similar to vanilla)
@@ -102,6 +135,15 @@ public class GuiTextFieldEmoji extends GuiTextField {
                 Gui.drawRect(drawX + beforeWidth, drawY - 1,
                         drawX + beforeWidth + selectedWidth, drawY + 9,
                         -16776961); // Blue selection color
+            }
+
+            // Disable scissor test
+            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+        } else {
+            // Empty text - just draw cursor if focused
+            boolean showCursor = this.isFocused() && (System.currentTimeMillis() / 500) % 2 == 0;
+            if (showCursor) {
+                Gui.drawRect(drawX, drawY - 1, drawX + 1, drawY + 9, -3092272);
             }
         }
     }
