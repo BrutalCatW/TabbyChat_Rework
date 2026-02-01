@@ -149,12 +149,28 @@ public class GuiTextFieldEmoji extends GuiTextField {
     }
 
     /**
-     * Override setText to handle emoji conversion
+     * Override setText to handle emoji conversion and filter newlines
      */
     @Override
     public void setText(String text) {
+        // Filter out newline characters to prevent multi-line text
+        if (text != null) {
+            text = text.replace("\n", "").replace("\r", "");
+        }
         // Text is stored as-is (with Unicode emoji)
         // Conversion to PUA happens during rendering
         super.setText(text);
+    }
+
+    /**
+     * Override writeText to filter newlines
+     */
+    @Override
+    public void writeText(String text) {
+        // Filter out newline characters
+        if (text != null) {
+            text = text.replace("\n", "").replace("\r", "");
+        }
+        super.writeText(text);
     }
 }

@@ -11,6 +11,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.ScaledResolution;
+import org.lwjgl.opengl.GL11;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -110,7 +112,7 @@ public class TCSpellCheckManager {
                     String fromWord = EmojiRegistry.convertUnicodeToMarkers(input.substring(wordIndex));
                     x += EmojiManager.getInstance().getTextWidth(beforeWord);
                     width = EmojiManager.getInstance().getTextWidth(fromWord);
-                    this.drawUnderline(screen, x, y, width);
+                    this.drawUnderline(screen, currentField, x, y, width);
 
                     if (inputs.hasPrevious()) {
                         int remainder = errLength - input.length() + wordIndex;
@@ -136,7 +138,7 @@ public class TCSpellCheckManager {
                     width = EmojiManager.getInstance().getTextWidth(errorWord);
                 }
 
-                this.drawUnderline(screen, x, y, width);
+                this.drawUnderline(screen, currentField, x, y, width);
             }
         }
         finally {
@@ -147,12 +149,30 @@ public class TCSpellCheckManager {
     /**
      * Marks word as misspelled
      */
-    private void drawUnderline(GuiScreen screen, int x, int y, int width) {
+    private void drawUnderline(GuiScreen screen, GuiTextField field, int x, int y, int width) {
+        // Enable scissor test to clip underline within field bounds
+        Minecraft mc = Minecraft.getMinecraft();
+        ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        int scale = sr.getScaleFactor();
+
+        // Calculate scissor box in screen pixels (from bottom-left)
+        int scissorX = field.xPosition * scale;
+        int scissorY = mc.displayHeight - (field.yPosition + field.height) * scale;
+        int scissorWidth = field.width * scale;
+        int scissorHeight = field.height * scale;
+
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+
+        // Draw underline dots
         int next = x + 1;
         while (next - x < width) {
             Gui.drawRect(next - 1, y, next, y + 1, 0xaaff0000);
             next += 2;
         }
+
+        // Disable scissor test
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
     }
 
     protected void handleListenerEvent(SpellCheckEvent event) {

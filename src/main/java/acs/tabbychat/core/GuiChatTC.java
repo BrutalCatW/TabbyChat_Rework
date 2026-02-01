@@ -698,7 +698,7 @@ public class GuiChatTC extends GuiChat {
             text = inputField.getText();
         this.inputField = new GuiTextFieldEmoji(this.fontRendererObj, 4, this.height - 16,
                                                 textFieldWidth, 16);
-        this.inputField.setMaxStringLength(500);
+        this.inputField.setMaxStringLength(256);
         this.inputField.setCanLoseFocus(false);
         this.inputField.setFocused(true);
         this.inputField.setText(text);
@@ -733,7 +733,7 @@ public class GuiChatTC extends GuiChat {
         for (int i = 1; i < 3; i++) {
             placeholder = new GuiTextFieldEmoji(this.fontRendererObj, 4, this.height - 16 * (i + 1),
                                                 textFieldWidth, 16);
-            placeholder.setMaxStringLength(500);
+            placeholder.setMaxStringLength(256);
             placeholder.setCanLoseFocus(false);
             placeholder.setFocused(false);
             placeholder.setText("");
