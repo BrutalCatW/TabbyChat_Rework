@@ -95,8 +95,8 @@ public class ChatBox {
                              trayColor);
 
                 // Draw filler for extra chat space
-                // Gui.drawRect(0, -current.height + tabTrayHeight + 1, current.width
-                //     - ChatScrollBar.barWidth - 2, -chatHeight, opacity / 2 << 24);
+                 Gui.drawRect(0, -current.height + tabTrayHeight + 1, current.width
+                     - ChatScrollBar.barWidth - 2, -chatHeight, opacity / 2 << 24);
 
                 // Draw resize button with icon (12x12 modern style)
                 boolean resizeHovered = resizeHovered();
@@ -317,7 +317,7 @@ public class ChatBox {
      */
     public static int getChatHeight() {
         // Adjusted for line height of 10 instead of 9 (for emoji support)
-        return current.height - tabTrayHeight + 4;
+        return current.height - tabTrayHeight + 3;
     }
 
     /**
