@@ -385,7 +385,7 @@ public class GuiNewChatTC extends GuiNewChat {
                     chatReadLock.unlock();
                 }
             }
-            return returnMe;
+            return null;
         }
     }
 
