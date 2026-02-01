@@ -26,9 +26,10 @@ public class ChatBox {
     public static boolean resizing = false;
     public static boolean anchoredTop = false;
     public static boolean pinned = false;
-    protected static int tabTrayHeight = 18;
+    public static int tabTrayHeight = 18;
     private static final int tabHeight = 18;
     private static int chatHeight = 165;
+    public static int actualChatHeight = 0; // Actual height of visible content, set by GuiNewChatTC
     private static Point dragStart = new Point(0, 0);
     private static final GuiNewChatTC gnc = GuiNewChatTC.getInstance();
 
@@ -94,8 +95,8 @@ public class ChatBox {
                              trayColor);
 
                 // Draw filler for extra chat space
-                Gui.drawRect(0, -current.height + tabTrayHeight + 1, current.width
-                    - ChatScrollBar.barWidth - 2, -chatHeight, opacity / 2 << 24);
+                // Gui.drawRect(0, -current.height + tabTrayHeight + 1, current.width
+                //     - ChatScrollBar.barWidth - 2, -chatHeight, opacity / 2 << 24);
 
                 // Draw resize button with icon (12x12 modern style)
                 boolean resizeHovered = resizeHovered();
@@ -315,7 +316,8 @@ public class ChatBox {
      * Returns chatbox height
      */
     public static int getChatHeight() {
-        return current.height - tabTrayHeight - 1;
+        // Adjusted for line height of 10 instead of 9 (for emoji support)
+        return current.height - tabTrayHeight + 4;
     }
 
     /**

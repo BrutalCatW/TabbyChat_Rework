@@ -326,6 +326,8 @@ public class GuiNewChatTC extends GuiNewChat {
                     ChatBox.drawChatBoxBorder(this, false, currentOpacity);
                     tc.pollForUnread(this, currentTick);
                 }
+                // Update actualChatHeight AFTER drawing border (so border uses previous frame's value)
+                ChatBox.actualChatHeight = this.chatHeight;
             }
             GL11.glPopMatrix();
         }
@@ -347,9 +349,9 @@ public class GuiNewChatTC extends GuiNewChat {
                     int displayedLines = Math.min(this.getHeightSetting() / 10,
                                                   this.chatLines.size());
                     if (clickXRel <= ChatBox.getChatWidth()
-                        && clickYRel < this.mc.fontRenderer.FONT_HEIGHT * displayedLines
+                        && clickYRel < 10 * displayedLines
                         + displayedLines) {
-                        int lineIndex = clickYRel / this.mc.fontRenderer.FONT_HEIGHT
+                        int lineIndex = clickYRel / 10
                             + this.scrollOffset;
                         if (lineIndex < displayedLines + this.scrollOffset
                             && this.chatLines.get(lineIndex) != null) {
