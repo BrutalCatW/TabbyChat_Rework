@@ -187,17 +187,22 @@ public class GuiEmojiPicker {
         int x = bounds.x;
         int y = bounds.y;
 
+        // Calculate opacity same as chat background
+        float chatOpacity = mc.gameSettings.chatOpacity * 0.9f + 0.1f;
+        int opacity = (int)(255 * chatOpacity);
+        int bgOpacity = opacity / 2 << 24;
+
         // Draw background
-        Gui.drawRect(x, y, x + width, y + height, 0xF0000000);
+        Gui.drawRect(x, y, x + width, y + height, bgOpacity);
 
         // Draw border
         drawBorder(x, y, width, height, 0xFF555555);
 
         // Draw header bar (for dragging)
-        drawHeader(x, y, mouseX, mouseY);
+        drawHeader(x, y, mouseX, mouseY, opacity);
 
         // Draw tabs
-        drawTabs(x, y + HEADER_HEIGHT, mouseX, mouseY);
+        drawTabs(x, y + HEADER_HEIGHT, mouseX, mouseY, opacity);
 
         // Draw emoji grid
         drawEmojiGrid(x, y + HEADER_HEIGHT + TAB_HEIGHT, mouseX, mouseY);
@@ -217,11 +222,13 @@ public class GuiEmojiPicker {
     /**
      * Draw header bar for dragging
      */
-    private void drawHeader(int x, int y, int mouseX, int mouseY) {
+    private void drawHeader(int x, int y, int mouseX, int mouseY, int opacity) {
         boolean hovered = mouseX >= x && mouseX < x + width &&
                          mouseY >= y && mouseY < y + HEADER_HEIGHT;
 
-        int bgColor = hovered ? 0xFF333333 : 0xFF222222;
+        // Use opacity for header background (slightly darker than main bg)
+        int bgOpacity = opacity / 2 << 24;
+        int bgColor = hovered ? (bgOpacity | 0x333333) : (bgOpacity | 0x222222);
         Gui.drawRect(x, y, x + width, y + HEADER_HEIGHT, bgColor);
 
         // Draw title
@@ -263,7 +270,7 @@ public class GuiEmojiPicker {
     /**
      * Draw category tabs
      */
-    private void drawTabs(int x, int y, int mouseX, int mouseY) {
+    private void drawTabs(int x, int y, int mouseX, int mouseY, int opacity) {
         Category[] categories = Category.values();
         int tabWidth = (width - BORDER_SIZE * 2) / categories.length;
 
@@ -276,9 +283,10 @@ public class GuiEmojiPicker {
             boolean hovered = mouseX >= tabX && mouseX < tabX + tabWidth &&
                             mouseY >= tabY && mouseY < tabY + TAB_HEIGHT - BORDER_SIZE;
 
-            // Draw tab background
-            int bgColor = cat == currentCategory ? 0xFF333333 :
-                         (hovered ? 0xFF222222 : 0xFF111111);
+            // Draw tab background with opacity
+            int bgOpacity = opacity / 2 << 24;
+            int bgColor = cat == currentCategory ? (bgOpacity | 0x333333) :
+                         (hovered ? (bgOpacity | 0x222222) : (bgOpacity | 0x111111));
             Gui.drawRect(tabX, tabY, tabX + tabWidth, tabY + TAB_HEIGHT - BORDER_SIZE, bgColor);
 
             // Draw tab icon (emoji)

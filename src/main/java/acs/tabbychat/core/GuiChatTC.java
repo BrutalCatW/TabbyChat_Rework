@@ -67,6 +67,7 @@ public class GuiChatTC extends GuiChat {
     private GuiButton sendButton;  // Send button next to input field
     private GuiButton emojiButton;  // Emoji picker button left of send button
     private GuiEmojiPicker emojiPicker;  // Emoji picker GUI
+    private static boolean wasEmojiPickerVisible = false;  // Remember picker state between GUI opens
     private static final int SEND_BUTTON_ID = 9999;
     private static final int EMOJI_BUTTON_ID = 10000;
     private static final int SEND_BUTTON_WIDTH = 20;
@@ -724,6 +725,11 @@ public class GuiChatTC extends GuiChat {
                 this.emojiPicker = new GuiEmojiPicker();
             }
             this.emojiPicker.setTargetTextField(this.inputField);
+
+            // Restore emoji picker visibility state
+            if (wasEmojiPickerVisible) {
+                this.emojiPicker.setVisible(true);
+            }
         }
 
         if (!tc.enabled())
@@ -1125,6 +1131,9 @@ public class GuiChatTC extends GuiChat {
         ChatBox.dragging = false;
         ChatBox.resizing = false;
         gnc.resetScroll();
+
+        // Save emoji picker state
+        wasEmojiPickerVisible = this.emojiPicker != null && this.emojiPicker.isVisible();
 
         // run onGuiClosed on extensions
         for (IChatUpdateExtension ext : extensions.getListOf(IChatUpdateExtension.class)) {
