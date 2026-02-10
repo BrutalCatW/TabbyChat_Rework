@@ -43,13 +43,19 @@ public class GuiTextFieldEmoji extends GuiTextField {
         int textColor = 0xFFFFFF;
 
         // Get displayed text (with cursor consideration)
-        String text = this.getText();
+        String originalText = this.getText();
 
         // Convert Unicode emoji to PUA markers for rendering
-        text = EmojiRegistry.convertUnicodeToMarkers(text);
+        String text = EmojiRegistry.convertUnicodeToMarkers(originalText);
 
-        int cursorPos = this.getCursorPosition();
-        int selectionEnd = this.getSelectionEnd();
+        // Get cursor positions from original text
+        int originalCursorPos = this.getCursorPosition();
+        int originalSelectionEnd = this.getSelectionEnd();
+
+        // Convert cursor positions to match the converted text
+        // (emoji surrogate pairs become single PUA chars, so positions change)
+        int cursorPos = EmojiRegistry.convertPosition(originalText, originalCursorPos);
+        int selectionEnd = EmojiRegistry.convertPosition(originalText, originalSelectionEnd);
 
         // Calculate scroll offset for long text
         String displayText = text;

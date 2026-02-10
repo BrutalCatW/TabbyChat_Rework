@@ -727,6 +727,72 @@ public class EmojiRegistry {
     }
 
     /**
+     * Convert a position in the original text to a position in the converted text
+     * (after Unicode emoji → PUA conversion)
+     *
+     * This is needed because emoji surrogate pairs (2 chars) become PUA markers (1 char),
+     * so cursor positions need to be adjusted.
+     *
+     * @param originalText The original text with Unicode emoji
+     * @param originalPos Position in the original text
+     * @return Equivalent position in the converted text
+     */
+    public static int convertPosition(String originalText, int originalPos) {
+        if (originalText == null || originalText.isEmpty() || originalPos <= 0) {
+            return 0;
+        }
+
+        // Clamp originalPos to text length
+        if (originalPos > originalText.length()) {
+            originalPos = originalText.length();
+        }
+
+        int convertedPos = 0;
+
+        for (int i = 0; i < originalPos && i < originalText.length(); ) {
+            int codePoint = originalText.codePointAt(i);
+            Emoji emoji = UNICODE_TO_EMOJI.get(codePoint);
+
+            if (emoji != null) {
+                // This is an emoji - it will become 1 PUA char in converted text
+                convertedPos++;
+
+                // Skip surrogate pair if supplementary codepoint
+                if (Character.isSupplementaryCodePoint(codePoint)) {
+                    i += 2;  // Skip both high and low surrogate
+                } else {
+                    i++;
+                }
+
+                // Skip variation selector if present
+                if (i < originalText.length()) {
+                    int nextCodePoint = originalText.codePointAt(i);
+                    if (nextCodePoint == 0xFE0F || nextCodePoint == 0xFE0E) {
+                        i++;
+                    }
+                }
+            } else {
+                // Regular character - stays the same in converted text
+                if (Character.isSupplementaryCodePoint(codePoint)) {
+                    // Supplementary character (non-emoji) - still 2 chars in both texts
+                    convertedPos += 2;
+                    i += 2;
+                } else if (codePoint == 0xFE0F || codePoint == 0xFE0E) {
+                    // Orphan variation selector - skipped in conversion
+                    i++;
+                    // Don't increment convertedPos (variation selector is removed)
+                } else {
+                    // Normal char
+                    convertedPos++;
+                    i++;
+                }
+            }
+        }
+
+        return convertedPos;
+    }
+
+    /**
      * Check if initialized
      */
     public static boolean isInitialized() {
