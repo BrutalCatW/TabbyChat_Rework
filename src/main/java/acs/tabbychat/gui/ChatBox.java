@@ -33,38 +33,18 @@ public class ChatBox {
     private static Point dragStart = new Point(0, 0);
     private static final GuiNewChatTC gnc = GuiNewChatTC.getInstance();
 
+    // Horizontal scroll for tabs (instead of multi-row layout)
+    private static int tabScrollOffset = 0;
+    private static int totalTabsWidth = 0;
+
     /**
-     * Adds a row to the tab tray
+     * DEPRECATED: Adds a row to the tab tray (multi-row layout)
+     * Now using horizontal scroll instead of multi-row
      */
+    @Deprecated
     public static void addRowToTray() {
-        // Grow virtual screen width/height to counter reduced size due to
-        // chat scaling
-        float sf = gnc.getScaleSetting();
-        int sh = MathHelper.floor_float((gnc.sr.getScaledHeight() + current.y) / sf - current.y);
-
-        // Add tab row to tray
-        tabTrayHeight += tabHeight;
-
-        if (current.height + tabHeight - absMinY > sh) {
-            // Check if box is too tall for screen
-            // Constrain box height to screen, stick to top
-            current.y = anchoredTop ? -sh + 1 : -sh + 1 + current.height;
-            current.height = sh + absMinY - 3;
-        }
-        else if (!anchoredTop && current.y - current.height - tabHeight - 1 < -sh) {
-            // Tray needs to slide up, but can't
-            current.y = -sh + current.height + 1;
-            current.height += tabHeight;
-        }
-        else if (anchoredTop && current.y + current.height + tabHeight > absMinY) {
-            // Tray needs to slide down, but can't
-            current.height += tabHeight;
-            current.y = absMinY - current.height;
-        }
-        else { // Tray/chatbox is free to move either way
-            // expand tray/box
-            current.height += tabHeight;
-        }
+        // NO-OP - horizontal scroll is used instead
+        // This method is kept for backwards compatibility but does nothing
     }
 
     /**
@@ -553,37 +533,30 @@ public class ChatBox {
     }
 
     /**
-     * Updates tabs
+     * Updates tabs (horizontal scroll, single row)
      */
     public static void updateTabs(LinkedHashMap<String, ChatChannel> chanObjs) {
         int tabWidth;
         int tabX = current.x;
         int tabY = gnc.sr.getScaledHeight() + current.y
             + (anchoredTop ? current.height - tabTrayHeight : -current.height);
-        int tabDx = 0;
-        int rows = 0;
+        int tabDx = -tabScrollOffset; // Apply scroll offset
 
-        // Reset tab tray height
+        // Reset tab tray height to single row
         int moveY = tabTrayHeight - tabHeight;
         tabTrayHeight = tabHeight;
         current.height -= moveY;
 
+        // Calculate total width of all tabs
+        totalTabsWidth = 0;
         for (ChatChannel chan : chanObjs.values()) {
             tabWidth = TabbyChat.mc.fontRenderer.getStringWidth(chan.getAlias() + "<>") + 8;
-            if (tabDx + tabWidth > current.width - 6 && tabWidth < current.width - 6) {
-                rows++;
-                if (tabHeight * (rows + 1) > tabTrayHeight) {
-                    addRowToTray();
-                }
-                tabDx = 0;
-                if (!anchoredTop) {
-                    for (ChatChannel chan2 : chanObjs.values()) {
-                        if (chan2 == chan)
-                            break;
-                        chan2.tab.y(chan2.tab.y() + tabHeight);
-                    }
-                }
-            }
+            totalTabsWidth += tabWidth + 1;
+        }
+
+        // Position tabs in single row with scroll offset
+        for (ChatChannel chan : chanObjs.values()) {
+            tabWidth = TabbyChat.mc.fontRenderer.getStringWidth(chan.getAlias() + "<>") + 8;
 
             if (chan.tab == null) {
                 chan.setButtonObj(new ChatButton(chan.getID(), tabX + tabDx, tabY,
@@ -593,13 +566,74 @@ public class ChatBox {
                 chan.tab.id = chan.getID();
                 chan.tab.x(tabX + tabDx);
                 chan.tab.y(tabY);
-                if (anchoredTop)
-                    chan.tab.y(chan.tab.y() + tabHeight * rows);
                 chan.tab.width(tabWidth);
                 chan.tab.height(tabHeight);
                 chan.tab.displayString = chan.getDisplayTitle();
             }
             tabDx += tabWidth + 1;
         }
+
+        // Clamp scroll offset to valid range (reserve space for resize/pin buttons)
+        int reservedSpace = 30; // Space for resize and pin buttons
+        int maxScroll = Math.max(0, totalTabsWidth - (current.width - reservedSpace) + 6);
+        tabScrollOffset = Math.max(0, Math.min(maxScroll, tabScrollOffset));
+    }
+
+    /**
+     * Handle mouse input for tab scrolling (call this BEFORE processing wheel events)
+     * Returns true if tab scroll was handled and further wheel processing should be skipped
+     */
+    public static boolean handleTabScrollInput() {
+        boolean chatOpen = gnc.getChatOpen();
+        GuiScreen theScreen = TabbyChat.mc.currentScreen;
+        if (!chatOpen || theScreen == null)
+            return false;
+
+        // Check for wheel event
+        int wheelDelta = org.lwjgl.input.Mouse.getEventDWheel();
+        if (wheelDelta == 0)
+            return false;
+
+        // Get mouse position
+        int mx = org.lwjgl.input.Mouse.getEventX();
+        int my = org.lwjgl.input.Mouse.getEventY();
+
+        // Convert raw mouse coords to GUI coords (same as tabTrayHovered)
+        Point mouse = scaleMouseCoords(mx, my);
+        if (mouse == null)
+            return false;
+
+        // Check if mouse is over tab tray (same logic as tabTrayHovered)
+        boolean overTabTray = false;
+        int reservedSpace = 30; // Space for resize and pin buttons
+
+        if (!anchoredTop) {
+            // Tab tray is at top of chatbox
+            overTabTray = (mouse.x > current.x && mouse.x < current.x + current.width - reservedSpace
+                && mouse.y > current.y - current.height && mouse.y < current.y - current.height + tabTrayHeight);
+        } else {
+            // Tab tray is at bottom of chatbox
+            overTabTray = (mouse.x > current.x && mouse.x < current.x + current.width - reservedSpace
+                && mouse.y > current.y + current.height - tabTrayHeight && mouse.y < current.y + current.height);
+        }
+
+        if (overTabTray) {
+            // Calculate max scroll
+            int maxScroll = Math.max(0, totalTabsWidth - (current.width - reservedSpace) + 6);
+
+            // Apply scroll (wheelDelta is already normalized to -1 or 1)
+            tabScrollOffset -= wheelDelta * 20;  // Scroll by 20 pixels per wheel tick
+            tabScrollOffset = Math.max(0, Math.min(maxScroll, tabScrollOffset));
+
+            return true; // Event handled, skip further wheel processing
+        }
+        return false;
+    }
+
+    /**
+     * Reset tab scroll offset (call when tabs are updated or chat is resized)
+     */
+    public static void resetTabScroll() {
+        tabScrollOffset = 0;
     }
 }

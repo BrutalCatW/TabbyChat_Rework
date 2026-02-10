@@ -483,7 +483,36 @@ public class GuiChatTC extends GuiChat {
             if (buttonTemp.id == EMOJI_BUTTON_ID || buttonTemp.id == SEND_BUTTON_ID) {
                 continue;
             }
+
+            // Enable clipping for tab buttons to prevent overflow
+            boolean isTabButton = buttonTemp instanceof ChatButton;
+            if (isTabButton) {
+                ScaledResolution sr = new ScaledResolution(this.mc, this.mc.displayWidth, this.mc.displayHeight);
+                int scale = sr.getScaleFactor();
+
+                // Calculate tab tray position
+                int tabTrayY = sr.getScaledHeight() + ChatBox.current.y
+                    + (ChatBox.anchoredTop ? ChatBox.current.height - ChatBox.tabTrayHeight : -ChatBox.current.height);
+
+                // Clip tabs to tab tray area only (reserve 30px on right for resize/pin buttons)
+                int reservedSpace = 30;
+                int clipX = ChatBox.current.x * scale;
+                int clipY = (sr.getScaledHeight() - tabTrayY - ChatBox.tabTrayHeight) * scale;
+                int clipWidth = (ChatBox.current.width - reservedSpace) * scale;
+                int clipHeight = ChatBox.tabTrayHeight * scale;
+
+                // Only enable clipping if dimensions are valid
+                if (clipWidth > 0 && clipHeight > 0) {
+                    GL11.glEnable(GL11.GL_SCISSOR_TEST);
+                    GL11.glScissor(clipX, clipY, clipWidth, clipHeight);
+                }
+            }
+
             buttonTemp.drawButton(this.mc, cursorX, cursorY);
+
+            if (isTabButton) {
+                GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            }
         }
 
         // Draw context menus
@@ -647,6 +676,13 @@ public class GuiChatTC extends GuiChat {
             }
         }
 
+        // Handle tab scrolling first (checks wheel event internally)
+        if (ChatBox.handleTabScrollInput()) {
+            // Tab scroll handled, skip chat scroll
+            return;
+        }
+
+        // Handle chat content scrolling
         int wheelDelta = Mouse.getEventDWheel();
         if (wheelDelta != 0) {
             wheelDelta = Math.min(1, wheelDelta);

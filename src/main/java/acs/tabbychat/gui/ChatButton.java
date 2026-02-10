@@ -100,8 +100,38 @@ public class ChatButton extends GuiButton {
     public boolean mousePressed(Minecraft mc, int par2, int par3) {
         Rectangle cursor = translateButtonDims(new Rectangle(this.x(), this.y(), this.width(),
                                                              this.height()));
-        return this.enabled && this.visible && par2 >= cursor.x && par3 >= cursor.y
+
+        // Check if click is within button bounds
+        boolean withinBounds = this.enabled && this.visible && par2 >= cursor.x && par3 >= cursor.y
                 && par2 < cursor.x + cursor.width && par3 < cursor.y + cursor.height;
+
+        if (!withinBounds) {
+            return false;
+        }
+
+        // Don't handle clicks in reserved area (for resize/pin buttons)
+        // Reserved area is last 30px on the right of chatbox
+        int reservedSpace = 30;
+        int chatboxRightEdge = ChatBox.current.x + ChatBox.current.width;
+        int reservedAreaStart = chatboxRightEdge - reservedSpace;
+
+        // If click is in reserved area, ignore it for tab buttons
+        if (par2 >= reservedAreaStart && par2 <= chatboxRightEdge) {
+            return false;
+        }
+
+        // Don't handle clicks outside visible tab tray area (for scrolled tabs)
+        // Tabs that are scrolled out of view should not be clickable
+        int visibleAreaLeft = ChatBox.current.x;
+        int visibleAreaRight = chatboxRightEdge - reservedSpace;
+
+        // Check if the button (or click) is outside the visible area
+        // Use click position to determine if click is in visible area
+        if (par2 < visibleAreaLeft || par2 > visibleAreaRight) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
