@@ -356,6 +356,7 @@ public class GuiNewChatTC extends GuiNewChat {
                         int lineIndex = clickYRel / 10
                             + this.scrollOffset;
                         if (lineIndex < displayedLines + this.scrollOffset
+                            && lineIndex < this.chatLines.size()
                             && this.chatLines.get(lineIndex) != null) {
                             TCChatLine chatline = this.chatLines.get(lineIndex);
 
