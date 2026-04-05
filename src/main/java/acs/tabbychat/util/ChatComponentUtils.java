@@ -161,7 +161,7 @@ public class ChatComponentUtils {
                 newChat.appendText(part);
                 continue;
             }
-            IChatComponent last = newChat.getSiblings().get(
+            IChatComponent last = (IChatComponent) newChat.getSiblings().get(
                 newChat.getSiblings().size() - 1);
             EnumChatFormatting format = null;
             for (EnumChatFormatting formats : EnumChatFormatting.values()) {

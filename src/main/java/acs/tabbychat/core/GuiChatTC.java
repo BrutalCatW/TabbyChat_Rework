@@ -116,8 +116,9 @@ public class GuiChatTC extends GuiChat {
                 return;
         }
 
-        if (!(par1GuiButton instanceof ChatButton _button))
+        if (!(par1GuiButton instanceof ChatButton))
             return;
+        ChatButton _button = (ChatButton) par1GuiButton;
         if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) && tc.channelMap.get("*") == _button.channel) {
             this.mc.displayGuiScreen(TabbyChat.generalSettings);
             return;
@@ -432,8 +433,10 @@ public class GuiChatTC extends GuiChat {
                 try {
                     NBTBase nbtbase = JsonToNBT.func_150315_a(hoverevent.getValue()
                                                                   .getUnformattedText());
-                    if (nbtbase instanceof NBTTagCompound nbt)
+                    if (nbtbase instanceof NBTTagCompound) {
+                        NBTTagCompound nbt = (NBTTagCompound) nbtbase;
                         itemstack = ItemStack.loadItemStackFromNBT(nbt);
+                    }
                 }
                 catch (Exception ignored) {
                 }
@@ -472,7 +475,8 @@ public class GuiChatTC extends GuiChat {
             GL11.glDisable(GL11.GL_LIGHTING);
         }
 
-        for (GuiButton buttonTemp : this.buttonList) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton buttonTemp = (GuiButton) _rawBtn;
             if (buttonTemp instanceof PrefsButton && buttonTemp.id == 1) {
                 if (mc.thePlayer != null && !mc.thePlayer.isPlayerSleeping()) {
                     this.buttonList.remove(buttonTemp);
@@ -615,7 +619,7 @@ public class GuiChatTC extends GuiChat {
         else {
             if (this.sentHistoryCursor == historyLength)
                 this.historyBuffer = this.inputField.getText();
-            StringBuilder _sb = new StringBuilder(this.gnc.getSentMessages().get(loc));
+            StringBuilder _sb = new StringBuilder((String) this.gnc.getSentMessages().get(loc));
             this.setText(_sb, _sb.length());
             this.sentHistoryCursor = loc;
         }
@@ -840,7 +844,7 @@ public class GuiChatTC extends GuiChat {
             this.playerNamesFound = false;
         switch (_code) {
             // TAB: execute vanilla name completion
-            case Keyboard.KEY_TAB -> {
+            case Keyboard.KEY_TAB: {
                 if (GuiScreen.isCtrlKeyDown()) {
                     // CTRL+SHIFT+TAB: switch active tab to previous
                     if (GuiScreen.isShiftKeyDown()) {
@@ -852,16 +856,17 @@ public class GuiChatTC extends GuiChat {
                     break;
                 }
                 this.func_146404_p_();
+                break;
             }
             // ESCAPE: close the chat interface
-            case Keyboard.KEY_ESCAPE -> this.mc.displayGuiScreen(null);
+            case Keyboard.KEY_ESCAPE: this.mc.displayGuiScreen(null); break;
 
             // RETURN: send chat to server
-            case Keyboard.KEY_NUMPADENTER, Keyboard.KEY_RETURN -> this.sendChat(ChatBox.pinned);
+            case Keyboard.KEY_NUMPADENTER: case Keyboard.KEY_RETURN: this.sendChat(ChatBox.pinned); break;
 
             // UP: if currently in multi-line chat, move into the above textbox.
             // Otherwise, go back one in the sent history (forced by Ctrl)
-            case Keyboard.KEY_UP -> {
+            case Keyboard.KEY_UP: {
                 if (GuiScreen.isCtrlKeyDown())
                     this.getSentHistory(-1);
                 else {
@@ -877,10 +882,11 @@ public class GuiChatTC extends GuiChat {
                     else
                         this.getSentHistory(-1);
                 }
+                break;
             }
             // DOWN: if currently in multi-line chat, move into the below textbox.
             // Otherwise, go forward one in the sent history (force by Ctrl)
-            case Keyboard.KEY_DOWN -> {
+            case Keyboard.KEY_DOWN: {
                 if (GuiScreen.isCtrlKeyDown())
                     this.getSentHistory(1);
                 else {
@@ -896,37 +902,42 @@ public class GuiChatTC extends GuiChat {
                     else
                         this.getSentHistory(1);
                 }
+                break;
             }
             // PAGE UP: scroll up through chat
-            case Keyboard.KEY_PRIOR -> {
+            case Keyboard.KEY_PRIOR: {
                 this.gnc.scroll(19);
                 if (this.tc.enabled())
                     ChatScrollBar.scrollBarMouseWheel();
+                break;
             }
             // PAGE DOWN: scroll down through chat
-            case Keyboard.KEY_NEXT -> {
+            case Keyboard.KEY_NEXT: {
                 this.gnc.scroll(-19);
                 if (this.tc.enabled())
                     ChatScrollBar.scrollBarMouseWheel();
+                break;
             }
             // BACKSPACE: delete previous character, minding potential contents of
             // other input fields
-            case Keyboard.KEY_BACK -> {
+            case Keyboard.KEY_BACK: {
                 if (this.inputField.isFocused() && this.inputField.getCursorPosition() > 0)
                     this.inputField.textboxKeyTyped(_char, _code);
                 else
                     this.removeCharsAtCursor(-1);
+                break;
             }
             // DELETE: delete next character, minding potential contents of other
             // input fields
-            case Keyboard.KEY_DELETE -> {
+            case Keyboard.KEY_DELETE: {
                 if (this.inputField.isFocused())
                     this.inputField.textboxKeyTyped(_char, _code);
                 else
                     this.removeCharsAtCursor(1);
+                break;
             }
             // LEFT/RIGHT: move the cursor
-            case Keyboard.KEY_LEFT -> {
+            case Keyboard.KEY_LEFT: {
                 int foc = this.getFocusedFieldIndex();
                 if (foc < this.getInputListSize() - 1
                     && this.inputList.get(foc).getCursorPosition() == 0) {
@@ -936,8 +947,9 @@ public class GuiChatTC extends GuiChat {
                         inputList.get(foc + 1).getText().length());
                 }
                 this.inputList.get(this.getFocusedFieldIndex()).textboxKeyTyped(_char, _code);
+                break;
             }
-            case Keyboard.KEY_RIGHT -> {
+            case Keyboard.KEY_RIGHT: {
                 int foc1 = this.getFocusedFieldIndex();
                 if (foc1 > 0
                     && this.inputList.get(foc1).getCursorPosition() >= this.inputList.get(foc1)
@@ -947,8 +959,9 @@ public class GuiChatTC extends GuiChat {
                     this.inputList.get(foc1 - 1).setCursorPosition(0);
                 }
                 this.inputList.get(this.getFocusedFieldIndex()).textboxKeyTyped(_char, _code);
+                break;
             }
-            default -> {
+            default: {
                 // CTRL + NUM1-9: Make the numbered tab active
                 if (GuiScreen.isCtrlKeyDown() && !Keyboard.isKeyDown(Keyboard.KEY_LMENU)
                     && !Keyboard.isKeyDown(Keyboard.KEY_RMENU)) {
@@ -1120,7 +1133,8 @@ public class GuiChatTC extends GuiChat {
                     return;
             }
         // Replicating GuiScreen's mouseClicked method since 'super' won't work
-        for (GuiButton _guibutton : this.buttonList) {
+        for (Object _rawBtn2 : this.buttonList) {
+            GuiButton _guibutton = (GuiButton) _rawBtn2;
             if (_guibutton.mousePressed(this.mc, _x, _y)) {
                 if (_button == 0) {
                     // Handle regular buttons (like send button)
@@ -1132,14 +1146,16 @@ public class GuiChatTC extends GuiChat {
                     }
 
                     // Handle ChatButton
-                    if (_guibutton instanceof ChatButton guiButton) {
+                    if (_guibutton instanceof ChatButton) {
+                        ChatButton guiButton = (ChatButton) _guibutton;
                         this.selectedButton = guiButton;
                         this.mc.thePlayer.playSound("random.click", 1.0F, 1.0F);
                         this.actionPerformed(guiButton);
                         return;
                     }
                 }
-                else if (_button == 1 && _guibutton instanceof ChatButton guiButton) {
+                else if (_button == 1 && _guibutton instanceof ChatButton) {
+                    ChatButton guiButton = (ChatButton) _guibutton;
                     if (guiButton.channel == this.tc.channelMap.get("*"))
                         return;
                     this.mc.displayGuiScreen(new ChatChannelGUI(guiButton.channel));

@@ -23,7 +23,8 @@ public class TCChatLine extends TCChatLineFake {
 
     public TCChatLine(ChatLine _cl) {
         super(_cl.getUpdatedCounter(), _cl.func_151461_a(), _cl.getChatLineID());
-        if (_cl instanceof TCChatLine line) {
+        if (_cl instanceof TCChatLine) {
+            TCChatLine line = (TCChatLine) _cl;
             timeStamp = line.timeStamp;
             statusMsg = line.statusMsg;
             processedTextCache = line.processedTextCache; // CRITICAL: Copy emoji processed text cache

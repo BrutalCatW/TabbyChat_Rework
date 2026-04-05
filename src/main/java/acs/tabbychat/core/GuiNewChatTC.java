@@ -364,7 +364,8 @@ public class GuiNewChatTC extends GuiNewChat {
 
                             for (Object o : chatline.getChatComponentWithTimestamp()) {
                                 returnMe = (IChatComponent) o;
-                                if (returnMe instanceof ChatComponentText toReturn) {
+                                if (returnMe instanceof ChatComponentText) {
+                                    ChatComponentText toReturn = (ChatComponentText) returnMe;
                                     String textPart = this.func_146235_b(toReturn.getChatComponentText_TextValue());
 
                                     // Use EmojiManager to get width with emoji support

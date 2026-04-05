@@ -12,7 +12,8 @@ public class ContextCopy extends ChatContext {
 
     @Override
     public void onClicked() {
-        if (Minecraft.getMinecraft().currentScreen instanceof GuiChatTC screen) {
+        if (Minecraft.getMinecraft().currentScreen instanceof GuiChatTC) {
+            GuiChatTC screen = (GuiChatTC) Minecraft.getMinecraft().currentScreen;
             GuiScreen.setClipboardString(screen.inputField.getSelectedText());
         }
     }

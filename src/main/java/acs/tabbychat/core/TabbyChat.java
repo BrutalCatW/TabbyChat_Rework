@@ -199,9 +199,11 @@ public class TabbyChat {
             while (iter.hasNext()) {
                 chan = iter.next();
                 if (i == ind) {
-                    if (mc.currentScreen instanceof GuiChatTC curScreen)
+                    if (mc.currentScreen instanceof GuiChatTC) {
+                        GuiChatTC curScreen = (GuiChatTC) mc.currentScreen;
                         curScreen.checkCommandPrefixChange(
                             this.channelMap.get(actives.get(0)), chan);
+                    }
                     this.resetDisplayedChat();
                     return;
                 }
@@ -217,8 +219,10 @@ public class TabbyChat {
             ChatChannel chan = iter.next();
             while (iter.hasNext()) {
                 if (chan.getTitle().equals(actives.get(0))) {
-                    if (mc.currentScreen instanceof GuiChatTC curScreen)
+                    if (mc.currentScreen instanceof GuiChatTC) {
+                        GuiChatTC curScreen = (GuiChatTC) mc.currentScreen;
                         curScreen.checkCommandPrefixChange(chan, iter.next());
+                    }
                     this.resetDisplayedChat();
                     return;
                 }
@@ -226,8 +230,10 @@ public class TabbyChat {
             }
             if (chan.getTitle().equals(actives.get(0))) {
                 iter = this.channelMap.values().iterator();
-                if (iter.hasNext() && mc.currentScreen instanceof GuiChatTC curScreen)
+                if (iter.hasNext() && mc.currentScreen instanceof GuiChatTC) {
+                    GuiChatTC curScreen = (GuiChatTC) mc.currentScreen;
                     curScreen.checkCommandPrefixChange(chan, iter.next());
+                }
                 this.resetDisplayedChat();
             }
         }
@@ -241,9 +247,10 @@ public class TabbyChat {
             ChatChannel chan = iter.previous();
             while (iter.hasPrevious()) {
                 if (chan.getTitle().equals(actives.get(0))) {
-                    if (mc.currentScreen instanceof GuiChatTC curScreen)
-                        curScreen.checkCommandPrefixChange(chan,
-                                                           iter.previous());
+                    if (mc.currentScreen instanceof GuiChatTC) {
+                        GuiChatTC curScreen = (GuiChatTC) mc.currentScreen;
+                        curScreen.checkCommandPrefixChange(chan, iter.previous());
+                    }
                     this.resetDisplayedChat();
                     return;
                 }
@@ -253,8 +260,10 @@ public class TabbyChat {
                 chan.active = false;
                 iter = new ArrayList<>(this.channelMap.values())
                     .listIterator(this.channelMap.size());
-                if (iter.hasPrevious() && mc.currentScreen instanceof GuiChatTC curScreen)
+                if (iter.hasPrevious() && mc.currentScreen instanceof GuiChatTC) {
+                    GuiChatTC curScreen = (GuiChatTC) mc.currentScreen;
                     curScreen.checkCommandPrefixChange(chan, iter.previous());
+                }
                 this.resetDisplayedChat();
             }
         }
@@ -274,7 +283,8 @@ public class TabbyChat {
                 return;
             theChan = new ChatChannel(name);
             this.channelMap.put(name, theChan);
-            if (mc.currentScreen instanceof GuiChatTC curScreen) {
+            if (mc.currentScreen instanceof GuiChatTC) {
+                GuiChatTC curScreen = (GuiChatTC) mc.currentScreen;
                 curScreen.addChannelLive(theChan);
             }
         }
@@ -642,7 +652,8 @@ public class TabbyChat {
                 pm.cmdPrefix = "/msg " + pmTab;
                 this.channelMap.put(pmTab, pm);
                 this.addToChannel(pmTab, resultChatLine, false);
-                if (mc.currentScreen instanceof GuiChatTC curScreen) {
+                if (mc.currentScreen instanceof GuiChatTC) {
+                    GuiChatTC curScreen = (GuiChatTC) mc.currentScreen;
                     curScreen.addChannelLive(pm);
                 }
             }
@@ -737,13 +748,12 @@ public class TabbyChat {
                             style.setColor(iFilter.getValue().highlightColor.toVanilla());
 
                         switch (iFilter.getValue().highlightFormat) {
-                            case BOLD -> style.setBold(true);
-                            case ITALIC -> style.setItalic(true);
-                            case STRIKED -> style.setStrikethrough(true);
-                            case UNDERLINE -> style.setUnderlined(true);
-                            case MAGIC -> style.setObfuscated(true);
-                            case DEFAULT -> {
-                            }
+                            case BOLD: style.setBold(true); break;
+                            case ITALIC: style.setItalic(true); break;
+                            case STRIKED: style.setStrikethrough(true); break;
+                            case UNDERLINE: style.setUnderlined(true); break;
+                            case MAGIC: style.setObfuscated(true); break;
+                            case DEFAULT: break;
                         }
                         chat = chat1.appendSibling(chat2).appendSibling(chat3);
                     }

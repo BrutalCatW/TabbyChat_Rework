@@ -109,7 +109,8 @@ public class ChatChannelGUI extends GuiScreen {
             + this.tc.channelMap.size(), rightX - 34, topY + 35, 0xffffff);
 
         // Draw buttons
-        for (GuiButton guiButton : this.buttonList) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton guiButton = (GuiButton) _rawBtn;
             guiButton.drawButton(mc, _x, _y);
         }
     }
@@ -163,16 +164,21 @@ public class ChatChannelGUI extends GuiScreen {
                 break;
             position++;
         }
-        for (GuiButton drawable : this.buttonList) {
-            if (drawable instanceof ITCSetting<?> setting)
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton drawable = (GuiButton) _rawBtn;
+            if (drawable instanceof ITCSetting) {
+                ITCSetting<?> setting = (ITCSetting<?>) drawable;
                 setting.resetDescription();
+            }
         }
     }
 
     @Override
     protected void keyTyped(char par1, int par2) {
-        for (GuiButton o : this.buttonList) {
-            if (o instanceof TCSettingTextBox tmp) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton o = (GuiButton) _rawBtn;
+            if (o instanceof TCSettingTextBox) {
+                TCSettingTextBox tmp = (TCSettingTextBox) o;
                 tmp.keyTyped(par1, par2);
             }
         }
@@ -181,8 +187,10 @@ public class ChatChannelGUI extends GuiScreen {
 
     @Override
     public void mouseClicked(int par1, int par2, int par3) {
-        for (GuiButton o : this.buttonList) {
-            if (o instanceof TCSettingTextBox tmp) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton o = (GuiButton) _rawBtn;
+            if (o instanceof TCSettingTextBox) {
+                TCSettingTextBox tmp = (TCSettingTextBox) o;
                 tmp.mouseClicked(par1, par2, par3);
             }
         }

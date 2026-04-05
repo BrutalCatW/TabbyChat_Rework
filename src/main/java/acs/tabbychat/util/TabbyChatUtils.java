@@ -58,9 +58,9 @@ import java.util.Properties;
 import java.util.zip.GZIPOutputStream;
 
 public class TabbyChatUtils {
-    public final static String version = "GRADLETOKEN_VERSION";
-    public final static String name = "GRADLETOKEN_MODNAME";
-    public final static String modid = "GRADLETOKEN_MODID";
+    public final static String version = "1.0";
+    public final static String name = "TabbyChat";
+    public final static String modid = "tabbychat";
     public static Logger log = LogManager.getLogger(name);
     private static Calendar logDay = Calendar.getInstance();
     private static final File logDir = new File(new File(Minecraft.getMinecraft().mcDataDir, "logs"),
@@ -114,8 +114,9 @@ public class TabbyChatUtils {
     public static void chatGuiTick(Minecraft mc) {
         GuiScreen screen = mc.currentScreen;
         //Also catches nulls
-        if (!(screen instanceof GuiChat chat))
+        if (!(screen instanceof GuiChat))
             return;
+        GuiChat chat = (GuiChat) screen;
         if (screen.getClass() == GuiChatTC.class)
             return;
         if (screen.getClass() == GuiSleepTC.class)

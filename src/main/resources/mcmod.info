@@ -1,9 +1,9 @@
 [
 {
-	"modid": "${modId}",
-	"name": "${modName}",
-	"version": "${modVersion}",
-	"mcversion": "${minecraftVersion}",
+	"modid": "tabbychat",
+	"name": "TabbyChat",
+	"version": "@VERSION@",
+	"mcversion": "1.7.10",
 	"description": "SMP Chat Overhaul
 - Split chat into tabs
 - Custom filters w/ highlighting & sounds

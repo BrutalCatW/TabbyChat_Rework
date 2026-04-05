@@ -40,7 +40,8 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
 
     @Override
     public void actionPerformed(GuiButton button) {
-        if (button instanceof ITCSetting<?> settingButton && !(button instanceof TCSettingTextBox)) {
+        if (button instanceof ITCSetting && !(button instanceof TCSettingTextBox)) {
+            ITCSetting<?> settingButton = (ITCSetting<?>) button;
             settingButton.actionPerformed();
         }
         else if (button.id == SAVEBUTTON) {
@@ -112,7 +113,8 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
                          ScreenList.get(i).bgcolor);
             }
         }
-        for (GuiButton guiButton : this.buttonList) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton guiButton = (GuiButton) _rawBtn;
             guiButton.drawButton(mc, x, y);
         }
     }
@@ -120,8 +122,10 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
     @Override
     public void handleMouseInput() {
         super.handleMouseInput();
-        for (GuiButton o : this.buttonList) {
-            if (o instanceof TCSettingSlider tmp) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton o = (GuiButton) _rawBtn;
+            if (o instanceof TCSettingSlider) {
+                TCSettingSlider tmp = (TCSettingSlider) o;
                 tmp.handleMouseInput();
             }
         }
@@ -166,16 +170,21 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
         this.defineDrawableSettings();
         this.initDrawableSettings();
         this.validateButtonStates();
-        for (GuiButton drawable : this.buttonList) {
-            if (drawable instanceof ITCSetting<?> settingDrawable)
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton drawable = (GuiButton) _rawBtn;
+            if (drawable instanceof ITCSetting) {
+                ITCSetting<?> settingDrawable = (ITCSetting<?>) drawable;
                 settingDrawable.resetDescription();
+            }
         }
     }
 
     @Override
     public void keyTyped(char par1, int par2) {
-        for (GuiButton o : this.buttonList) {
-            if (o instanceof TCSettingTextBox tmp) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton o = (GuiButton) _rawBtn;
+            if (o instanceof TCSettingTextBox) {
+                TCSettingTextBox tmp = (TCSettingTextBox) o;
                 tmp.keyTyped(par1, par2);
             }
         }
@@ -186,8 +195,10 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
     public Properties loadSettingsFile() {
         Properties settingsTable = loadSettingsFromFile(this.settingsFile);
         if (!settingsTable.isEmpty()) {
-            for (GuiButton drawable : this.buttonList) {
-                if (drawable instanceof ITCSetting<?> settingDrawable) {
+            for (Object _rawBtn : this.buttonList) {
+                GuiButton drawable = (GuiButton) _rawBtn;
+                if (drawable instanceof ITCSetting) {
+                    ITCSetting<?> settingDrawable = (ITCSetting<?>) drawable;
                     settingDrawable.loadSelfFromProps(settingsTable);
                 }
             }
@@ -198,8 +209,10 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
 
     @Override
     public void mouseClicked(int par1, int par2, int par3) {
-        for (GuiButton o : this.buttonList) {
-            if (o instanceof ITCSetting<?> tmp) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton o = (GuiButton) _rawBtn;
+            if (o instanceof ITCSetting) {
+                ITCSetting<?> tmp = (ITCSetting<?>) o;
                 if (tmp.getType() == ITCSetting.TCSettingType.TEXTBOX || tmp.getType() == ITCSetting.TCSettingType.ENUM
                     || tmp.getType() == ITCSetting.TCSettingType.SLIDER) {
                     tmp.mouseClicked(par1, par2, par3);
@@ -214,8 +227,10 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
      */
     @Override
     public void resetTempVars() {
-        for (GuiButton drawable : this.buttonList) {
-            if (drawable instanceof ITCSetting<?> settingDrawable) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton drawable = (GuiButton) _rawBtn;
+            if (drawable instanceof ITCSetting) {
+                ITCSetting<?> settingDrawable = (ITCSetting<?>) drawable;
                 settingDrawable.reset();
             }
         }
@@ -245,8 +260,10 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
                 TabbyChat.printException("Error while writing settings to file '" + settingsFile
                                              + "'", e);
             }
-        for (GuiButton drawable : this.buttonList) {
-            if (drawable instanceof ITCSetting<?> settingDrawable) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton drawable = (GuiButton) _rawBtn;
+            if (drawable instanceof ITCSetting) {
+                ITCSetting<?> settingDrawable = (ITCSetting<?>) drawable;
                 settingDrawable.saveSelfToProps(settingsTable);
             }
         }
@@ -270,8 +287,10 @@ abstract class TCSettingsGUI extends GuiScreen implements ITCSettingsGUI {
      */
     @Override
     public void storeTempVars() {
-        for (GuiButton drawable : this.buttonList) {
-            if (drawable instanceof ITCSetting<?> settingDrawable) {
+        for (Object _rawBtn : this.buttonList) {
+            GuiButton drawable = (GuiButton) _rawBtn;
+            if (drawable instanceof ITCSetting) {
+                ITCSetting<?> settingDrawable = (ITCSetting<?>) drawable;
                 settingDrawable.save();
             }
         }
