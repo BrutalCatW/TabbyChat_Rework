@@ -149,37 +149,47 @@ public class ChatButton extends GuiButton {
             boolean hovered = cursorX >= cursor.x && cursorY >= cursor.y
                     && cursorX < cursor.x + cursor.width && cursorY < cursor.y + cursor.height;
 
-            int var7 = 0xa0a0a0;
-            int var8 = 0;
+            // Цвета: стиль brutal-cat.ru
+            final long fillColor;
+            final long borderColor;
+            final int textColor;
             if (!this.enabled) {
-                var7 = -0x5f5f60;
+                fillColor   = 0x1A1C1C24L;
+                borderColor = 0x3055B9EAL;
+                textColor   = 0x7096AFC0;
+            } else if (hovered) {
+                fillColor   = 0x4A55B2FDL;
+                borderColor = 0xCC55B2FDL;
+                textColor   = 0xFFB3D4FC;
+            } else if (this.channel.active) {
+                fillColor   = 0x3055B2FDL;
+                borderColor = 0x7855B2FDL;
+                textColor   = 0xFF55B2FD;
+            } else if (this.channel.unread) {
+                fillColor   = 0x2AFFFFFFL;
+                borderColor = 0x70FFFF55L;
+                textColor   = 0xFFFFFF55;
+            } else {
+                fillColor   = 0x1A1C1C24L;
+                borderColor = 0x3055B9EAL;
+                textColor   = 0xFF96AFC0;
             }
-            else if (hovered) {
-                var7 = 0xffffa0;
-                var8 = 0x7f8052;
-            }
-            else if (this.channel.active) {
-                var7 = 0xa5e7e4;
-                var8 = 0x5b7c7b;
-            }
-            else if (this.channel.unread) {
-                var7 = 0xff0000;
-                var8 = 0x720000;
-            }
-            drawRect(this.x(), this.y(), this.x() + this.width(), this.y() + this.height(), var8
-                    + (_opacity / 2 << 24));
             GL11.glEnable(GL11.GL_BLEND);
+            acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(
+                this.x(), this.y(), this.width(), this.height(),
+                fillColor, borderColor, 3
+            );
             if (hovered && Keyboard.isKeyDown(42)) {
                 String special = (this.channel.getTitle().equalsIgnoreCase("*") ? "\u2398"
                                                                                 : "\u26A0");
                 this.drawCenteredString(fr, special, this.x() + this.width() / 2,
-                                        this.y() + (this.height() - 8) / 2, var7 + (textOpacity << 24));
+                                        this.y() + (this.height() - 8) / 2, textColor);
             }
             else {
                 // Remove emoji markers for button titles (keep it simple)
                 String displayTitle = this.displayString.replace("¿", "");
                 this.drawCenteredString(fr, displayTitle, this.x() + this.width() / 2,
-                                        this.y() + (this.height() - 8) / 2, var7 + (textOpacity << 24));
+                                        this.y() + (this.height() - 8) / 2, textColor);
             }
         }
     }

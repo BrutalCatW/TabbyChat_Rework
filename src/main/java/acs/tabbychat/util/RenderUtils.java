@@ -142,6 +142,28 @@ public class RenderUtils {
     }
 
     /**
+     * Draw rounded rectangle with fill and 1px border.
+     * border == 0 → no border drawn.
+     */
+    public static void drawRectRoundedBorder(float x, float y, float w, float h, long fill, long border, float radius) {
+        drawRectRounded(x, y, w, h, fill, radius);
+        if (border == 0) return;
+        int r = (int) radius;
+        // straight edges
+        drawRectF(x + r,         y,             x + w - r,     y + 1,             border); // top
+        drawRectF(x + r,         y + h - 1,     x + w - r,     y + h,             border); // bottom
+        drawRectF(x,             y + r,         x + 1,         y + h - r,         border); // left
+        drawRectF(x + w - 1,     y + r,         x + w,         y + h - r,         border); // right
+        // corner pixels
+        for (int i = 1; i < r; i++) {
+            drawRectF(x + r - i,         y + i,         x + r - i + 1,         y + i + 1,         border); // TL
+            drawRectF(x + w - r + i - 1, y + i,         x + w - r + i,         y + i + 1,         border); // TR
+            drawRectF(x + r - i,         y + h - 1 - i, x + r - i + 1,         y + h - i,         border); // BL
+            drawRectF(x + w - r + i - 1, y + h - 1 - i, x + w - r + i,         y + h - i,         border); // BR
+        }
+    }
+
+    /**
      * Draw rounded rectangle with gradient
      */
     public static void drawRectRoundedGradient(float x, float y, float w, float h, long color1, long color2, float radius) {

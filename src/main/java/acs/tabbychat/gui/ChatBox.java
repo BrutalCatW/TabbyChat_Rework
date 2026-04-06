@@ -33,6 +33,16 @@ public class ChatBox {
     private static Point dragStart = new Point(0, 0);
     private static final GuiNewChatTC gnc = GuiNewChatTC.getInstance();
 
+    // ── Стиль brutal-cat.ru ───────────────────────────────────────────────────
+    private static final int C_CHAT_BG    = 0xE81C1C24;
+    private static final int C_TRAY_BG    = 0x401C1C24;
+    private static final int C_BORDER     = 0x5555B9EA;
+    private static final int C_BORDER_DIV = 0x3A55B9EA;
+    private static final int C_BTN_BG     = 0x2055B9EA;
+    private static final int C_BTN_HV     = 0x3855B9EA;
+    private static final int C_BTN_BD     = 0x5055B9EA;
+    private static final int C_BTN_HB     = 0xAA55B9EA;
+
     // Horizontal scroll for tabs (instead of multi-row layout)
     private static int tabScrollOffset = 0;
     private static int totalTabsWidth = 0;
@@ -51,11 +61,8 @@ public class ChatBox {
      * Draws the chat box border
      */
     public static void drawChatBoxBorder(Gui overlay, boolean chatOpen, int opacity) {
-        int borderColor = (2 * opacity / 3 << 24);
-        int trayColor = (opacity / 3 << 24);
-        int highlightColor = 0xffffa0 + (2 * opacity / 3 << 24);
-        int handleColor = resizeHovered() ? highlightColor : borderColor;
-        int pinColor = pinHovered() ? highlightColor : borderColor;
+        int borderColor = C_BORDER;
+        int trayColor   = C_TRAY_BG;
 
         if (chatOpen) {
             if (!anchoredTop) {
@@ -68,22 +75,23 @@ public class ChatBox {
 
                 // Draw border between focused chatbox and tab tray
                 Gui.drawRect(0, -current.height + tabTrayHeight, current.width, -current.height
-                    + tabTrayHeight + 1, borderColor);
+                    + tabTrayHeight + 1, C_BORDER_DIV);
 
                 // Add shading to tab tray
                 Gui.drawRect(0, -current.height, current.width, -current.height + tabTrayHeight,
                              trayColor);
 
                 // Draw filler for extra chat space
-                 Gui.drawRect(0, -current.height + tabTrayHeight + 1, current.width
-                     - ChatScrollBar.barWidth - 2, -chatHeight, opacity / 2 << 24);
+                Gui.drawRect(0, -current.height + tabTrayHeight + 1, current.width
+                    - ChatScrollBar.barWidth - 2, -chatHeight, C_CHAT_BG);
 
                 // Draw resize button with icon (12x12 modern style)
                 boolean resizeHovered = resizeHovered();
-                long resizeBg = resizeHovered ? 0xFF555555L : 0xFF333333L;
-                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                long resizeBg = resizeHovered ? C_BTN_HV : C_BTN_BG;
+                long resizeBd = resizeHovered ? C_BTN_HB : C_BTN_BD;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(
                     current.width - 12, -current.height + 3, 12, 12,
-                    resizeBg, resizeBg, 2
+                    resizeBg, resizeBd, 2
                 );
                 acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/resize_ico.png");
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, resizeHovered ? 1.0f : 0.7f);
@@ -92,13 +100,14 @@ public class ChatBox {
 
                 // Draw pin button with icon (12x12 modern style)
                 boolean pinHovered = pinHovered();
-                long pinBg = pinHovered ? 0xFF555555L : 0xFF333333L;
-                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                long pinBg = pinHovered ? C_BTN_HV : C_BTN_BG;
+                long pinBd = pinHovered ? C_BTN_HB : C_BTN_BD;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(
                     current.width - 26, -current.height + 3, 12, 12,
-                    pinBg, pinBg, 2
+                    pinBg, pinBd, 2
                 );
                 acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/plus_ico.png");
-                long pinIconColor = pinned ? 0xFFFFFFFFl : (pinHovered ? 0xFFFFFFFFl : 0xFFAAAAAAAAl);
+                long pinIconColor = pinned ? 0xFFFFFFFFl : (pinHovered ? 0xFFFFFFFFl : 0xFF96AFC0l);
                 acs.tabbychat.util.RenderUtils.glColor(pinIconColor);
                 acs.tabbychat.util.RenderUtils.drawTexture(current.width - 25, -current.height + 4, 0, 0, 16, 16, 10, 10, 16, 16);
                 acs.tabbychat.util.RenderUtils.glColor(0xFFFFFFFFl);
@@ -112,7 +121,7 @@ public class ChatBox {
 
                 // Draw border between focused chatbox and tab tray
                 Gui.drawRect(0, current.height - tabTrayHeight, current.width, current.height
-                    - tabTrayHeight - 1, borderColor);
+                    - tabTrayHeight - 1, C_BORDER_DIV);
 
                 // Add shading to tab tray
                 Gui.drawRect(0, current.height, current.width, current.height - tabTrayHeight,
@@ -120,14 +129,15 @@ public class ChatBox {
 
                 // Draw filler for extra chat space
                 Gui.drawRect(0, current.height - tabTrayHeight - chatHeight - 1, current.width
-                    - ChatScrollBar.barWidth - 2, 0, opacity / 2 << 24);
+                    - ChatScrollBar.barWidth - 2, 0, C_CHAT_BG);
 
                 // Draw resize button with icon (12x12 modern style)
                 boolean resizeHovered = resizeHovered();
-                long resizeBg = resizeHovered ? 0xFF555555L : 0xFF333333L;
-                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                long resizeBg = resizeHovered ? C_BTN_HV : C_BTN_BG;
+                long resizeBd = resizeHovered ? C_BTN_HB : C_BTN_BD;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(
                     current.width - 12, current.height - 15, 12, 12,
-                    resizeBg, resizeBg, 2
+                    resizeBg, resizeBd, 2
                 );
                 acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/resize_ico.png");
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, resizeHovered ? 1.0f : 0.7f);
@@ -136,13 +146,14 @@ public class ChatBox {
 
                 // Draw pin button with icon (12x12 modern style)
                 boolean pinHovered = pinHovered();
-                long pinBg = pinHovered ? 0xFF555555L : 0xFF333333L;
-                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
+                long pinBg = pinHovered ? C_BTN_HV : C_BTN_BG;
+                long pinBd = pinHovered ? C_BTN_HB : C_BTN_BD;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(
                     current.width - 26, current.height - 15, 12, 12,
-                    pinBg, pinBg, 2
+                    pinBg, pinBd, 2
                 );
                 acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/plus_ico.png");
-                long pinIconColor = pinned ? 0xFFFFFFFFl : (pinHovered ? 0xFFFFFFFFl : 0xFFAAAAAAAAl);
+                long pinIconColor = pinned ? 0xFFFFFFFFl : (pinHovered ? 0xFFFFFFFFl : 0xFF96AFC0l);
                 acs.tabbychat.util.RenderUtils.glColor(pinIconColor);
                 acs.tabbychat.util.RenderUtils.drawTexture(current.width - 25, current.height - 14, 0, 0, 16, 16, 10, 10, 16, 16);
                 acs.tabbychat.util.RenderUtils.glColor(0xFFFFFFFFl);

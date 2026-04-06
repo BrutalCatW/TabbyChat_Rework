@@ -311,7 +311,9 @@ public class GuiChatTC extends GuiChat {
             int inputBoxBottom = inputBoxTop + inputHeight + 2;
 
             // Draw background for input box (separate from chat)
-            drawRect(chatX, inputBoxTop, chatX + fullChatWidth, inputBoxBottom, Integer.MIN_VALUE);
+            drawRect(chatX, inputBoxTop, chatX + fullChatWidth, inputBoxBottom, 0xEE1C1C24);
+            // Top border line matching site style
+            drawRect(chatX, inputBoxTop, chatX + fullChatWidth, inputBoxTop + 1, 0x5555B9EA);
 
             // Update and draw text fields
             for (int i = 0; i < this.inputList.size(); i++) {
@@ -338,13 +340,13 @@ public class GuiChatTC extends GuiChat {
                 emojiButton.visible = true;
                 emojiButton.enabled = true;
 
-                // Draw custom emoji button with rounded background and icon (rounded style)
+                // Draw custom emoji button with rounded background and icon (site style)
                 boolean emojiHovered = cursorX >= emojiX && cursorX < emojiX + EMOJI_BUTTON_WIDTH &&
                                       cursorY >= emojiY && cursorY < emojiY + buttonHeight;
-                long emojiBg1 = emojiHovered ? 0xFF555555L : 0xFF333333L;
-                long emojiBg2 = emojiHovered ? 0xFF444444L : 0xFF222222L;
-                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
-                    emojiX, emojiY, EMOJI_BUTTON_WIDTH, buttonHeight, emojiBg1, emojiBg2, 2
+                long emojiBg = emojiHovered ? 0x3855B9EAL : 0x2055B9EAL;
+                long emojiBd = emojiHovered ? 0xAA55B9EAL : 0x5055B9EAL;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(
+                    emojiX, emojiY, EMOJI_BUTTON_WIDTH, buttonHeight, emojiBg, emojiBd, 2
                 );
                 acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/smile_ico.png");
                 org.lwjgl.opengl.GL11.glColor4f(1.0f, 1.0f, 1.0f, emojiHovered ? 1.0f : 0.8f);
@@ -366,13 +368,13 @@ public class GuiChatTC extends GuiChat {
                 sendButton.visible = true;
                 sendButton.enabled = true;
 
-                // Draw custom send button with rounded background and Telegram icon (rounded style)
+                // Draw custom send button with rounded background and Telegram icon (site style)
                 boolean sendHovered = cursorX >= sendX && cursorX < sendX + SEND_BUTTON_WIDTH &&
                                     cursorY >= sendY && cursorY < sendY + buttonHeight;
-                long sendBg1 = sendHovered ? 0xFF5588CCL : 0xFF4477BBL;
-                long sendBg2 = sendHovered ? 0xFF4477BBL : 0xFF3366AAL;
-                acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(
-                    sendX, sendY, SEND_BUTTON_WIDTH, buttonHeight, sendBg1, sendBg2, 2
+                long sendBg = sendHovered ? 0x4A55B2FDL : 0x3055B2FDL;
+                long sendBd = sendHovered ? 0xCC55B2FDL : 0x7855B2FDL;
+                acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(
+                    sendX, sendY, SEND_BUTTON_WIDTH, buttonHeight, sendBg, sendBd, 2
                 );
                 acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/tg_ico.png");
                 org.lwjgl.opengl.GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);

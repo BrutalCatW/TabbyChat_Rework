@@ -35,6 +35,25 @@ public class GuiEmojiPicker {
     private static final int MAX_WIDTH = 400;
     private static final int MAX_HEIGHT = 400;
 
+    // ── Стиль brutal-cat.ru ───────────────────────────────────────────────────
+    private static final int  C_BG          = 0xEE1C1C24;
+    private static final int  C_HEADER_BG   = 0x501C1C24;
+    private static final int  C_BORDER      = 0x5555B9EA;
+    private static final int  C_DIVIDER     = 0x3A55B9EA;
+    private static final int  C_TITLE       = 0xFFB3D4FC;
+    private static final int  C_TAB_ACTIVE  = 0x3055B2FD;
+    private static final int  C_TAB_HOVER   = 0x2055B9EA;
+    private static final int  C_TAB_NORM    = 0x101C1C24;
+    private static final int  C_TAB_IND     = 0xFF55B2FD;  // active tab indicator line
+    private static final int  C_EMOJI_HOVER = 0x2055B2FD;
+    private static final long C_BTN_BG      = 0x2055B9EAL;
+    private static final long C_BTN_HV      = 0x3855B9EAL;
+    private static final long C_BTN_BD      = 0x5055B9EAL;
+    private static final long C_BTN_HB      = 0xAA55B9EAL;
+    private static final int  C_SB_TRACK    = 0x201C1C24;
+    private static final int  C_SB_THUMB    = 0x5055B9EA;
+    private static final int  C_SB_THUMB_HV = 0x8055B9EA;
+
     // Position and size (static to persist between chat opens)
     private static Rectangle savedBounds = null;  // Saved position/size
     private Rectangle bounds;
@@ -187,22 +206,17 @@ public class GuiEmojiPicker {
         int x = bounds.x;
         int y = bounds.y;
 
-        // Calculate opacity same as chat background
-        float chatOpacity = mc.gameSettings.chatOpacity * 0.9f + 0.1f;
-        int opacity = (int)(255 * chatOpacity);
-        int bgOpacity = opacity / 2 << 24;
-
         // Draw background
-        Gui.drawRect(x, y, x + width, y + height, bgOpacity);
+        Gui.drawRect(x, y, x + width, y + height, C_BG);
 
         // Draw border
-        drawBorder(x, y, width, height, 0xFF555555);
+        drawBorder(x, y, width, height, C_BORDER);
 
         // Draw header bar (for dragging)
-        drawHeader(x, y, mouseX, mouseY, opacity);
+        drawHeader(x, y, mouseX, mouseY);
 
         // Draw tabs
-        drawTabs(x, y + HEADER_HEIGHT, mouseX, mouseY, opacity);
+        drawTabs(x, y + HEADER_HEIGHT, mouseX, mouseY);
 
         // Draw emoji grid
         drawEmojiGrid(x, y + HEADER_HEIGHT + TAB_HEIGHT, mouseX, mouseY);
@@ -222,21 +236,17 @@ public class GuiEmojiPicker {
     /**
      * Draw header bar for dragging
      */
-    private void drawHeader(int x, int y, int mouseX, int mouseY, int opacity) {
-        boolean hovered = mouseX >= x && mouseX < x + width &&
-                         mouseY >= y && mouseY < y + HEADER_HEIGHT;
+    private void drawHeader(int x, int y, int mouseX, int mouseY) {
+        // Header background + bottom divider
+        Gui.drawRect(x, y, x + width, y + HEADER_HEIGHT, C_HEADER_BG);
+        Gui.drawRect(x, y + HEADER_HEIGHT - 1, x + width, y + HEADER_HEIGHT, C_DIVIDER);
 
-        // Use opacity for header background (slightly darker than main bg)
-        int bgOpacity = opacity / 2 << 24;
-        int bgColor = hovered ? (bgOpacity | 0x333333) : (bgOpacity | 0x222222);
-        Gui.drawRect(x, y, x + width, y + HEADER_HEIGHT, bgColor);
-
-        // Draw title
+        // Title
         FontRenderer fr = mc.fontRenderer;
         String title = "Эмоджи";
         int titleX = x + (width - fr.getStringWidth(title)) / 2;
         int titleY = y + (HEADER_HEIGHT - 8) / 2;
-        fr.drawString(title, titleX, titleY, 0xFFFFFF);
+        fr.drawStringWithShadow(title, titleX, titleY, C_TITLE);
     }
 
     /**
@@ -247,8 +257,9 @@ public class GuiEmojiPicker {
                          mouseY >= y && mouseY < y + 12;
 
         // Draw rounded button background
-        long bgColor = (hovered || resizing) ? 0xFF555555L : 0xFF333333L;
-        acs.tabbychat.util.RenderUtils.drawRectRoundedGradient(x, y, 12, 12, bgColor, bgColor, 2);
+        long bgColor = (hovered || resizing) ? C_BTN_HV : C_BTN_BG;
+        long bdColor = (hovered || resizing) ? C_BTN_HB : C_BTN_BD;
+        acs.tabbychat.util.RenderUtils.drawRectRoundedBorder(x, y, 12, 12, bgColor, bdColor, 2);
 
         // Draw resize icon
         acs.tabbychat.util.RenderUtils.bindTexture("tabbychat", "textures/gui/resize_ico.png");
@@ -270,40 +281,45 @@ public class GuiEmojiPicker {
     /**
      * Draw category tabs
      */
-    private void drawTabs(int x, int y, int mouseX, int mouseY, int opacity) {
+    private void drawTabs(int x, int y, int mouseX, int mouseY) {
         Category[] categories = Category.values();
         int tabWidth = (width - BORDER_SIZE * 2) / categories.length;
+        int tabH = TAB_HEIGHT - BORDER_SIZE;
 
         for (int i = 0; i < categories.length; i++) {
             Category cat = categories[i];
             int tabX = x + BORDER_SIZE + i * tabWidth;
             int tabY = y + BORDER_SIZE;
 
-            // Check if hovered
+            boolean active  = cat == currentCategory;
             boolean hovered = mouseX >= tabX && mouseX < tabX + tabWidth &&
-                            mouseY >= tabY && mouseY < tabY + TAB_HEIGHT - BORDER_SIZE;
+                              mouseY >= tabY && mouseY < tabY + tabH;
 
-            // Draw tab background with opacity
-            int bgOpacity = opacity / 2 << 24;
-            int bgColor = cat == currentCategory ? (bgOpacity | 0x333333) :
-                         (hovered ? (bgOpacity | 0x222222) : (bgOpacity | 0x111111));
-            Gui.drawRect(tabX, tabY, tabX + tabWidth, tabY + TAB_HEIGHT - BORDER_SIZE, bgColor);
+            int bgColor = active ? C_TAB_ACTIVE : (hovered ? C_TAB_HOVER : C_TAB_NORM);
+            Gui.drawRect(tabX, tabY, tabX + tabWidth, tabY + tabH, bgColor);
 
-            // Draw tab icon (emoji)
+            // Active indicator line at bottom of tab
+            if (active) {
+                Gui.drawRect(tabX + 1, tabY + tabH - 1, tabX + tabWidth - 1, tabY + tabH, C_TAB_IND);
+            }
+
+            // Icon
             Emoji icon = EmojiCategory.getCategoryIcon(cat);
             if (icon != null) {
                 int iconX = tabX + (tabWidth - 12) / 2;
-                int iconY = tabY + (TAB_HEIGHT - 12) / 2;
+                int iconY = tabY + (tabH - 12) / 2;
                 EmojiRenderer.drawEmoji(icon, iconX, iconY, 12);
             } else {
-                // Fallback: draw category name
                 FontRenderer fr = mc.fontRenderer;
                 String name = cat.name().substring(0, 1);
                 int textX = tabX + (tabWidth - fr.getStringWidth(name)) / 2;
-                int textY = tabY + (TAB_HEIGHT - 8) / 2;
-                fr.drawString(name, textX, textY, 0xFFFFFF);
+                int textY = tabY + (tabH - 8) / 2;
+                int textColor = active ? C_TAB_IND : 0xFF96AFC0;
+                fr.drawString(name, textX, textY, textColor);
             }
         }
+        // Bottom divider under tabs
+        Gui.drawRect(x, y + BORDER_SIZE + tabH, x + width, y + BORDER_SIZE + tabH + 1, C_DIVIDER);
     }
 
     /**
@@ -342,7 +358,7 @@ public class GuiEmojiPicker {
             // Draw hover background
             if (hovered) {
                 Gui.drawRect(emojiX - 1, emojiY - 1, emojiX + EMOJI_SIZE + 1,
-                           emojiY + EMOJI_SIZE + 1, 0x80FFFFFF);
+                           emojiY + EMOJI_SIZE + 1, C_EMOJI_HOVER);
             }
 
             // Draw emoji
@@ -370,7 +386,7 @@ public class GuiEmojiPicker {
      */
     private void drawScrollbar(int x, int y, int h, int mouseX, int mouseY) {
         // Draw scrollbar track
-        Gui.drawRect(x, y, x + SCROLLBAR_WIDTH, y + h, 0xFF222222);
+        Gui.drawRect(x, y, x + SCROLLBAR_WIDTH, y + h, C_SB_TRACK);
 
         // Calculate scrollbar thumb
         if (currentEmojis == null || currentEmojis.isEmpty()) return;
@@ -386,7 +402,7 @@ public class GuiEmojiPicker {
             boolean hovered = mouseX >= x && mouseX < x + SCROLLBAR_WIDTH &&
                             mouseY >= thumbY && mouseY < thumbY + thumbHeight;
 
-            int thumbColor = hovered || scrollbarDragging ? 0xFFAAAAAA : 0xFF888888;
+            int thumbColor = hovered || scrollbarDragging ? C_SB_THUMB_HV : C_SB_THUMB;
 
             // Draw scrollbar thumb
             Gui.drawRect(x + 1, thumbY, x + SCROLLBAR_WIDTH - 1, thumbY + thumbHeight, thumbColor);

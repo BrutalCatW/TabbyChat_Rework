@@ -287,8 +287,10 @@ public class GuiNewChatTC extends GuiNewChat {
                             int yOrigin = ChatBox.anchoredTop && tc.enabled() ? -(visLineCounter * 10)
                                 + ChatBox.getChatHeight()
                                                                               : -visLineCounter * 10;
+                            // Background matches filler color (navy), fades with message opacity
+                            int lineAlpha = currentOpacity * 0xE8 / 255;
                             drawRect(xOrigin, yOrigin, xOrigin + this.chatWidth, yOrigin + 10,
-                                     currentOpacity / 2 << 24);
+                                     (lineAlpha << 24) | 0x1C1C24);
                             GL11.glEnable(GL11.GL_BLEND);
                             int idx = ChatBox.anchoredTop && tc.enabled() ? msgList.size() - i - 1
                                                                           : i;
